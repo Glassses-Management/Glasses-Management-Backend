@@ -1,6 +1,7 @@
 package com.example.spring_boot_project_api.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -18,4 +19,7 @@ public class BranchRequest {
     @NotBlank(message = "Phone number is require")
     @Size(max = 10, message = "Phone muner must be 10")
     private String phone;
+
+    @NotNull(message = "Id is required")
+    private Long manager_id;
 }

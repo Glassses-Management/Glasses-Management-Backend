@@ -42,7 +42,4 @@ public class Customer {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-
-
-    
 }
