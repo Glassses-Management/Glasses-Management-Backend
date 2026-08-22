@@ -15,3 +15,10 @@ Base package: `com.example.spring_boot_project_api` — layered as
 `controller` → `service` → `repository`, with `model`/`dto`/`mapper` kept separate. Never
 suggest exposing JPA entities directly from a controller — map through a `dto` + `mapper`. See
 `agent_guide_ai.md` for the full breakdown and conventions.
+
+<!-- mermaid-ai-skills:start -->
+## Mermaid Diagrams
+
+When the user asks to create, edit, or visualize a diagram, follow the
+instructions in `.github/instructions/mermaid.instructions.md`.
+<!-- mermaid-ai-skills:end -->
