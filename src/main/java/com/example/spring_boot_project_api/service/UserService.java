@@ -11,8 +11,11 @@ import com.example.spring_boot_project_api.repository.BranchRepository;
 import com.example.spring_boot_project_api.repository.UserRepository;
 
 import jakarta.persistence.EntityExistsException;
+
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Service
 public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;

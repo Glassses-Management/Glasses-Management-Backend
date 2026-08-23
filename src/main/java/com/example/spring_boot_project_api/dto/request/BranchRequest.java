@@ -20,6 +20,6 @@ public class BranchRequest {
     @Size(max = 10, message = "Phone muner must be 10")
     private String phone;
 
-    @NotNull(message = "Id is required")
-    private Long manager_id;
+    //     private Long manager_id;
+
 }

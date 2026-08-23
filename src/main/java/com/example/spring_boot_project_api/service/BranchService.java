@@ -29,11 +29,10 @@ public class BranchService {
 
     @Transactional
     public BranchResponse create(BranchRequest request){
-        User manager = userRepository.findById(request.getManager_id()).
-                       orElseThrow(() -> new EntityNotFoundException("User not found"));
+        // User manager = resolveManager(request.getManager_id());
         
         Branch branch = branchMapper.toEntity(request);
-        branch.setManager(manager);
+        // branch.setManager(manager);
 
         return branchMapper.toResponse(branchRepository.save(branch));
     }
@@ -52,15 +51,22 @@ public class BranchService {
     public BranchResponse update(Long id, BranchRequest request){
         Branch branch = getEntity(id);
 
-        User manager = userRepository.findById(request.getManager_id())
-                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        // User manager = resolveManager(request.getManager_id());
 
         branch.setName(request.getBranch_name());
         branch.setAddress(request.getAddress());
         branch.setPhone(request.getPhone());
-        branch.setManager(manager);
+        // branch.setManager(manager);
 
         return branchMapper.toResponse(branchRepository.save(branch));
+    }
+
+    private User resolveManager(Long managerId){
+        if (managerId == null) {
+            return null;
+        }
+        return userRepository.findById(managerId)
+               .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
     public void delete(Long id){

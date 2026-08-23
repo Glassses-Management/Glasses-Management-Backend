@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class BranchResponse {
     private Long id;
-    private Long manager_id;
+    // private Long manager_id; 
 
     private String name;
     private String address;

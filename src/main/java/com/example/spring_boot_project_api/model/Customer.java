@@ -33,7 +33,7 @@ public class Customer {
     @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(length = 255)
+    @Column(length = 100)
     private String address;
 
     @Column(name = "date_of_birth")

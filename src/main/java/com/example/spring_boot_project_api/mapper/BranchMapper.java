@@ -26,7 +26,7 @@ public class BranchMapper {
         response.setName(branch.getName());
         response.setAddress(branch.getAddress());
         response.setPhone(branch.getPhone());
-        response.setManager_id(branch.getManager() != null ? branch.getManager().getId() : null);
+        // response.setManager_id(branch.getManager() != null ? branch.getManager().getId() : null);
 
         return response;
     }
