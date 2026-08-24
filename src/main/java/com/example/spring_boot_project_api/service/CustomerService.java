@@ -30,17 +30,17 @@ public class CustomerService {
         ensureEmailAvailable(request.getEmail(), null);
 
         Customer customer = customerMapper.toEntity(request);
-        return customerMapper.toResponse(customerRepository.save(customer));
+        return customerMapper.toCreatedAtResponse(customerRepository.save(customer));
     }
 
     @Transactional(readOnly = true)
     public List<CustomerResponse> getAll() {
-        return customerRepository.findAll().stream().map(customerMapper::toResponse).toList();
+        return customerRepository.findAll().stream().map(customerMapper::toCreatedAtResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public CustomerResponse getById(Long id) {
-        return customerMapper.toResponse(getEntity(id));
+        return customerMapper.toCreatedAtResponse(getEntity(id));
     }
 
     @Transactional
@@ -56,7 +56,7 @@ public class CustomerService {
         customer.setAddress(request.getAddress());
         customer.setDateOfBirth(request.getDate_of_birth());
 
-        return customerMapper.toResponse(customerRepository.save(customer));
+        return customerMapper.toUpdatedAtResponse(customerRepository.save(customer));
     }
 
     @Transactional

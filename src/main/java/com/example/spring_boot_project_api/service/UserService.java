@@ -35,17 +35,17 @@ public class UserService {
         User user = userMapper.toEntity(request);
         user.setBranch(branch);
 
-        return userMapper.toResponse(userRepository.save(user));
+        return userMapper.toCreatedAtResponse(userRepository.save(user));
     }
 
     @Transactional(readOnly = true)
     public List<UserResponse> getAll(){
-        return userRepository.findAll().stream().map(userMapper::toResponse).toList();
+        return userRepository.findAll().stream().map(userMapper::toCreatedAtResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public UserResponse getById(Long id){
-        return userMapper.toResponse(getEntity(id));
+        return userMapper.toCreatedAtResponse(getEntity(id));
     }
 
     @Transactional
@@ -61,7 +61,7 @@ public class UserService {
         user.setRole(request.getRole());
         user.setBranch(branch);
 
-        return userMapper.toResponse(userRepository.save(user));
+        return userMapper.toUpdatedAtResponse(userRepository.save(user));
     }
 
     public void delete(Long id){

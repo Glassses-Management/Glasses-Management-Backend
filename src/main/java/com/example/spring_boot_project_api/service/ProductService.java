@@ -32,17 +32,17 @@ public class ProductService {
 
         Product product = productMapper.toEntity(request);
 
-        return productMapper.toResponse(productRepository.save(product));
+        return productMapper.toCreatedAtResponse(productRepository.save(product));
     }
 
     @Transactional(readOnly = true)
     public List<ProductResponse> getAll(){
-        return productRepository.findAll().stream().map(productMapper::toResponse).toList();
+        return productRepository.findAll().stream().map(productMapper::toCreatedAtResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public ProductResponse getById(Long id){
-        return productMapper.toResponse(getEntity(id));
+        return productMapper.toCreatedAtResponse(getEntity(id));
     }
 
     @Transactional
@@ -65,7 +65,7 @@ public class ProductService {
         product.setSupplier_contact(request.getSupplier_contact());
         product.setCategory(request.getCategory());
 
-        return productMapper.toResponse(productRepository.save(product));
+        return productMapper.toUpdatedAtResponse(productRepository.save(product));
     }
 
     public void delete(Long id){

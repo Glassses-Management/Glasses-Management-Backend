@@ -11,7 +11,6 @@ public class InventoryMapper {
 
     public Inventory toEntity(InventoryRequest request) {
         Inventory inventory = new Inventory();
-        inventory.setProduct_id(request.getProduct_id());
         inventory.setQuantity(request.getQuantity());
         inventory.setReorder_threshold(request.getReorder_threshold());
         return inventory;
@@ -23,11 +22,31 @@ public class InventoryMapper {
         }
         InventoryResponse response = new InventoryResponse();
         response.setId(inventory.getId());
-        response.setProduct_id(inventory.getProduct_id());
+        response.setProduct_id(inventory.getProduct() != null ? inventory.getProduct().getId() : null);
         response.setQuantity(inventory.getQuantity());
         response.setReorder_threshold(inventory.getReorder_threshold());
         response.setBranch_id(inventory.getBranch() != null ? inventory.getBranch().getId() : null);
         response.setLast_restocked_at(inventory.getLast_restocked_at());
+        response.setCreated_at(inventory.getCreatedAt());
+        response.setUpdated_at(inventory.getUpdatedAt());
+        return response;
+    }
+
+    public InventoryResponse toCreatedAtResponse(Inventory inventory) {
+        InventoryResponse response = toResponse(inventory);
+        if (response == null) {
+            return null;
+        }
+        response.setUpdated_at(null);
+        return response;
+    }
+
+    public InventoryResponse toUpdatedAtResponse(Inventory inventory) {
+        InventoryResponse response = toResponse(inventory);
+        if (response == null) {
+            return null;
+        }
+        response.setCreated_at(null);
         return response;
     }
 }

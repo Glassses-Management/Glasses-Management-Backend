@@ -34,17 +34,17 @@ public class BranchService {
         Branch branch = branchMapper.toEntity(request);
         // branch.setManager(manager);
 
-        return branchMapper.toResponse(branchRepository.save(branch));
+        return branchMapper.toCreatedAtResponse(branchRepository.save(branch));
     }
 
     @Transactional(readOnly = true)
     public List<BranchResponse> getAll(){
-        return branchRepository.findAll().stream().map(branchMapper::toResponse).toList();
+        return branchRepository.findAll().stream().map(branchMapper::toCreatedAtResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public BranchResponse getById(Long id){
-        return branchMapper.toResponse(getEntity(id));
+        return branchMapper.toCreatedAtResponse(getEntity(id));
     }
 
     @Transactional
@@ -58,7 +58,7 @@ public class BranchService {
         branch.setPhone(request.getPhone());
         // branch.setManager(manager);
 
-        return branchMapper.toResponse(branchRepository.save(branch));
+        return branchMapper.toUpdatedAtResponse(branchRepository.save(branch));
     }
 
     private User resolveManager(Long managerId){

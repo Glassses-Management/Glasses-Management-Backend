@@ -41,7 +41,7 @@ public class ProductRequest {
     @Size(max = 100, message = "Supplier name must be under 100 character")
     private String supplier_name;
 
-    @Size(max = 10, message = "Supplier contact must be 10")
+    @Size(max = 20, message = "Supplier contact must be under 20")
     private String supplier_contact;
 
     @NotBlank(message = "Category is require")

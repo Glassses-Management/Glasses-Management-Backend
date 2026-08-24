@@ -46,7 +46,27 @@ public class ProductMapper {
         response.setSupplier_name(product.getSupplier_name());
         response.setSupplier_contact(product.getSupplier_contact());
         response.setCategory(product.getCategory());
+        response.setCreated_at(product.getCreatedAt());
+        response.setUpdated_at(product.getUpdatedAt());
 
+        return response;
+    }
+
+    public ProductResponse toCreatedAtResponse(Product product) {
+        ProductResponse response = toResponse(product);
+        if (response == null) {
+            return null;
+        }
+        response.setUpdated_at(null);
+        return response;
+    }
+
+    public ProductResponse toUpdatedAtResponse(Product product) {
+        ProductResponse response = toResponse(product);
+        if (response == null) {
+            return null;
+        }
+        response.setCreated_at(null);
         return response;
     }
 }

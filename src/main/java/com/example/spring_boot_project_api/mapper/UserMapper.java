@@ -6,7 +6,6 @@ import com.example.spring_boot_project_api.dto.request.UserRequest;
 import com.example.spring_boot_project_api.dto.response.UserResponse;
 import com.example.spring_boot_project_api.model.User;
 
-
 @Component
 public class UserMapper {
 
@@ -29,8 +28,21 @@ public class UserMapper {
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
         response.setBranch_id(user.getBranch() != null ? user.getBranch().getId() : null);
-        response.setCreated_at(user.getCreated_at());
+        response.setCreated_at(user.getCreatedAt());
+        response.setUpdated_at(user.getUpdatedAt());
 
+        return response;
+    }
+
+    public UserResponse toCreatedAtResponse(User user){
+        UserResponse response = toResponse(user);
+        response.setUpdated_at(null);
+        return response;
+    }
+
+    public UserResponse toUpdatedAtResponse(User user){
+        UserResponse response = toResponse(user);
+        response.setCreated_at(null);
         return response;
     }
 }

@@ -31,6 +31,25 @@ public class CustomerMapper {
         response.setAddress(customer.getAddress());
         response.setDate_of_birth(customer.getDateOfBirth());
         response.setCreated_at(customer.getCreatedAt());
+        response.setUpdated_at(customer.getUpdatedAt());
+        return response;
+    }
+
+    public CustomerResponse toCreatedAtResponse(Customer customer) {
+        CustomerResponse response = toResponse(customer);
+        if (response == null) {
+            return null;
+        }
+        response.setUpdated_at(null);
+        return response;
+    }
+
+    public CustomerResponse toUpdatedAtResponse(Customer customer) {
+        CustomerResponse response = toResponse(customer);
+        if (response == null) {
+            return null;
+        }
+        response.setCreated_at(null);
         return response;
     }
 }

@@ -26,8 +26,22 @@ public class BranchMapper {
         response.setName(branch.getName());
         response.setAddress(branch.getAddress());
         response.setPhone(branch.getPhone());
+        response.setCreated_at(branch.getCreatedAt());
+        response.setUpdated_at(branch.getUpdatedAt());
         // response.setManager_id(branch.getManager() != null ? branch.getManager().getId() : null);
 
+        return response;
+    }
+
+    public BranchResponse toCreatedAtResponse(Branch branch) {
+        BranchResponse response = toResponse(branch);
+        response.setUpdated_at(null);
+        return response;
+    }
+
+    public BranchResponse toUpdatedAtResponse(Branch branch) {
+        BranchResponse response = toResponse(branch);
+        response.setCreated_at(null);
         return response;
     }
 }

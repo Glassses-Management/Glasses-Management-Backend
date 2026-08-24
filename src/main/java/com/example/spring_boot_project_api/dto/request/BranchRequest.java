@@ -13,11 +13,11 @@ public class BranchRequest {
     private String branch_name;
 
     @NotBlank(message = "Address is require")
-    @Size(max = 35, message = "Address must be exsisted under 35 character")
+    @Size(max = 100, message = "Address must be exsisted under 100 character")
     private String address;
 
     @NotBlank(message = "Phone number is require")
-    @Size(max = 10, message = "Phone muner must be 10")
+    @Size(max = 20, message = "Phone muner must be under 20")
     private String phone;
 
     //     private Long manager_id;
