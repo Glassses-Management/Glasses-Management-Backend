@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.spring_boot_project_api.dto.request.InventoryRequest;
 import com.example.spring_boot_project_api.dto.request.OrderRequest;
+import com.example.spring_boot_project_api.dto.response.InventoryResponse;
 import com.example.spring_boot_project_api.dto.response.OrderResponse;
 import com.example.spring_boot_project_api.service.OrderService;
 
@@ -33,6 +35,13 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<OrderResponse> create(@Valid @RequestBody OrderRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderService.create(request));
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<List<OrderResponse>> createBulk(@Valid @RequestBody List<@Valid OrderRequest> request){
+        List<OrderResponse> saved = request.stream().map(orderService::create).toList();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping

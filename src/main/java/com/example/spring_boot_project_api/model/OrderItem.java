@@ -1,5 +1,7 @@
 package com.example.spring_boot_project_api.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -48,4 +50,10 @@ public class OrderItem {
 
     @Column(name = "total_price")
     private Float total_price;
+
+    @Column(name = "created_at")
+    private LocalDateTime created_at;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updated_at;
 }

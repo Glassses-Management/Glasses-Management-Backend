@@ -34,6 +34,13 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(customerService.create(request));
     }
 
+    @PostMapping("/bulk")
+    public ResponseEntity<List<CustomerResponse>> createBulk(@Valid @RequestBody List<@Valid CustomerRequest> request){
+        List<CustomerResponse> saved = request.stream().map(customerService::create).toList();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
     @GetMapping
     public List<CustomerResponse> getAll() {
         return customerService.getAll();

@@ -1,5 +1,9 @@
 package com.example.spring_boot_project_api.dto.response;
 
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.Data;
 
 @Data
@@ -17,4 +21,9 @@ public class OrderItemResponse {
 
     private Float unit_price;
     private Float total_price;
+
+    private LocalDateTime created_at;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private LocalDateTime updated_at;
 }

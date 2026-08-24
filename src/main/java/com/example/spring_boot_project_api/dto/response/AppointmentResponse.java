@@ -14,4 +14,5 @@ public class AppointmentResponse {
     private LocalDateTime scheduled_at;
     private String status;
     private String notes;
+    private LocalDateTime created_at;
 }

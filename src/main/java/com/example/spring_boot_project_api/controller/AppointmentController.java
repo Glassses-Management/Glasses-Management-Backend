@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.spring_boot_project_api.dto.request.AppointmentRequest;
+import com.example.spring_boot_project_api.dto.request.BranchRequest;
 import com.example.spring_boot_project_api.dto.response.AppointmentResponse;
+import com.example.spring_boot_project_api.dto.response.BranchResponse;
 import com.example.spring_boot_project_api.service.AppointmentService;
 
 import jakarta.validation.Valid;
@@ -32,6 +34,13 @@ public class AppointmentController {
     @PostMapping
     public ResponseEntity<AppointmentResponse> create(@Valid @RequestBody AppointmentRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.create(request));
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<List<AppointmentResponse>> createBulk(@Valid @RequestBody List<@Valid AppointmentRequest> request){
+        List<AppointmentResponse> saved = request.stream().map(appointmentService::create).toList();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping

@@ -3,6 +3,8 @@ package com.example.spring_boot_project_api.dto.response;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.Data;
 
 @Data
@@ -26,5 +28,10 @@ public class PrescriptionResponse {
     private String notes;
 
     private LocalDate prescription_date;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private LocalDateTime created_at;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private LocalDateTime updated_at;
 }

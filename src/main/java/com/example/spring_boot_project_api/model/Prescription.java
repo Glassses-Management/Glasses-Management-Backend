@@ -11,8 +11,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Data;
+
+import org.hibernate.annotations.CreationTimestamp;
 
 @Data
 @Entity
@@ -68,5 +71,14 @@ public class Prescription {
     private LocalDate prescription_date;
 
     @Column(name = "created_at")
+    @CreationTimestamp
     private LocalDateTime created_at;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updated_at;
+
+    @PreUpdate
+    void onUpdate() {
+        this.updated_at = LocalDateTime.now();
+    }
 }

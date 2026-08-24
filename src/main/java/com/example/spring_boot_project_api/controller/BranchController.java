@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.spring_boot_project_api.dto.request.BranchRequest;
+import com.example.spring_boot_project_api.dto.request.CustomerRequest;
 import com.example.spring_boot_project_api.dto.response.BranchResponse;
+import com.example.spring_boot_project_api.dto.response.CustomerResponse;
 import com.example.spring_boot_project_api.service.BranchService;
 
 import jakarta.validation.Valid;
@@ -32,6 +34,13 @@ public class BranchController {
     @PostMapping
     public ResponseEntity<BranchResponse> create(@Valid @RequestBody BranchRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(branchService.create(request));
+    }
+    
+    @PostMapping("/bulk")
+    public ResponseEntity<List<BranchResponse>> createBulk(@Valid @RequestBody List<@Valid BranchRequest> request){
+        List<BranchResponse> saved = request.stream().map(branchService::create).toList();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping

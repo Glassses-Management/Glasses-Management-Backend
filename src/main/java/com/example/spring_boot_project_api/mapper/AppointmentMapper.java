@@ -29,6 +29,7 @@ public class AppointmentMapper {
         response.setScheduled_at(appointment.getScheduledAt());
         response.setStatus(appointment.getStatus());
         response.setNotes(appointment.getNotes());
+        response.setCreated_at(appointment.getCreated_at());
 
         return response;
     }

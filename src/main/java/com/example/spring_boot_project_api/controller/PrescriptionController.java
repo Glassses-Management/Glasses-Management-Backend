@@ -34,6 +34,14 @@ public class PrescriptionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(prescriptionService.create(request));
     }
 
+    @PostMapping("/bulk")
+    public ResponseEntity<List<PrescriptionResponse>> createBulk(@Valid @RequestBody List<@Valid PrescriptionRequest> requests) {
+        List<PrescriptionResponse> saved = requests.stream()
+                .map(prescriptionService::create)
+                .toList();
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
     @GetMapping
     public List<PrescriptionResponse> getAll() {
         return prescriptionService.getAll();
@@ -47,6 +55,11 @@ public class PrescriptionController {
     @GetMapping("/customer/{customerId}")
     public List<PrescriptionResponse> getByCustomerId(@PathVariable Long customerId) {
         return prescriptionService.getByCustomerId(customerId);
+    }
+
+    @GetMapping("/user/{userId}")
+    public List<PrescriptionResponse> getByUserId(@PathVariable Long userId) {
+        return prescriptionService.getByUserId(userId);
     }
 
     @PutMapping("/{id}")

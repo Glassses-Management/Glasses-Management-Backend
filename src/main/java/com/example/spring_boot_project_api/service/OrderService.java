@@ -104,6 +104,7 @@ public class OrderService {
         order.setStatus(updated.getStatus());
         order.setPayment_method(updated.getPayment_method());
         order.setPayment_status(updated.getPayment_status());
+        order.setUpdated_at(LocalDateTime.now());
 
         return orderMapper.toResponse(orderRepository.save(order));
     }

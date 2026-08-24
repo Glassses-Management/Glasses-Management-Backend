@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.spring_boot_project_api.dto.request.BranchRequest;
 import com.example.spring_boot_project_api.dto.request.InventoryRequest;
+import com.example.spring_boot_project_api.dto.response.BranchResponse;
 import com.example.spring_boot_project_api.dto.response.InventoryResponse;
 import com.example.spring_boot_project_api.service.InventoryService;
 
@@ -32,6 +34,13 @@ public class InventoryController {
     @PostMapping
     public ResponseEntity<InventoryResponse> create(@Valid @RequestBody InventoryRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(inventoryService.create(request));
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<List<InventoryResponse>> createBulk(@Valid @RequestBody List<@Valid InventoryRequest> request){
+        List<InventoryResponse> saved = request.stream().map(inventoryService::create).toList();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping

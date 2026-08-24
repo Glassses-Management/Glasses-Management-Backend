@@ -54,7 +54,11 @@ public class PrescriptionService {
         prescription.setBranch(branch);
         prescription.setUser(user);
 
-        return prescriptionMapper.toResponse(prescriptionRepository.save(prescription));
+        Prescription saved = prescriptionRepository.save(prescription);
+        PrescriptionResponse response = prescriptionMapper.toResponse(saved);
+        response.setUpdated_at(null);
+
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -70,6 +74,12 @@ public class PrescriptionService {
     @Transactional(readOnly = true)
     public List<PrescriptionResponse> getByCustomerId(Long customerId){
         return prescriptionRepository.findByCustomerId(customerId).stream()
+                .map(prescriptionMapper::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PrescriptionResponse> getByUserId(Long userId){
+        return prescriptionRepository.findByUserId(userId).stream()
                 .map(prescriptionMapper::toResponse).toList();
     }
 
@@ -100,7 +110,11 @@ public class PrescriptionService {
         prescription.setBranch(branch);
         prescription.setUser(user);
 
-        return prescriptionMapper.toResponse(prescriptionRepository.save(prescription));
+        Prescription saved = prescriptionRepository.saveAndFlush(prescription);
+        PrescriptionResponse response = prescriptionMapper.toResponse(saved);
+        response.setCreated_at(null);
+
+        return response;
     }
 
     public void delete(Long id){

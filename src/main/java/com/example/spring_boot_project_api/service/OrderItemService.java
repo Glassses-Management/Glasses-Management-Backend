@@ -1,5 +1,6 @@
 package com.example.spring_boot_project_api.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ public class OrderItemService {
     @Transactional
     public OrderItemResponse create(OrderItemRequest request){
         OrderItem orderItem = buildOrderItem(request);
+        orderItem.setCreated_at(LocalDateTime.now());
 
         return orderItemMapper.toResponse(orderItemRepository.save(orderItem));
     }
@@ -77,6 +79,7 @@ public class OrderItemService {
         orderItem.setLen_price(updated.getLen_price());
         orderItem.setUnit_price(updated.getUnit_price());
         orderItem.setTotal_price(updated.getTotal_price());
+        orderItem.setUpdated_at(LocalDateTime.now());
 
         return orderItemMapper.toResponse(orderItemRepository.save(orderItem));
     }

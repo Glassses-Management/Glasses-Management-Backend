@@ -13,6 +13,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 @Data
 @Entity
 @Table(name = "appointment")
@@ -42,5 +44,9 @@ public class Appointment {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
-   
+
+    @Column(name = "created_at")
+    @CreationTimestamp
+    private LocalDateTime created_at;
+
 }

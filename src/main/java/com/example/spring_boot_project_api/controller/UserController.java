@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.spring_boot_project_api.dto.request.InventoryRequest;
 import com.example.spring_boot_project_api.dto.request.UserRequest;
+import com.example.spring_boot_project_api.dto.response.InventoryResponse;
 import com.example.spring_boot_project_api.dto.response.UserResponse;
 import com.example.spring_boot_project_api.service.UserService;
 
@@ -32,6 +34,13 @@ public class UserController {
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody UserRequest request){
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request));
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<List<UserResponse>> createBulk(@Valid @RequestBody List<@Valid UserRequest> request){
+        List<UserResponse> saved = request.stream().map(userService::create).toList();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping

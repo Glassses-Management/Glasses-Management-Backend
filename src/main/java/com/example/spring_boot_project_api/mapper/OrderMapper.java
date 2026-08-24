@@ -44,6 +44,7 @@ public class OrderMapper {
 
         response.setOrder_date(order.getOrder_date());
         response.setCreated_at(order.getCreated_at());
+        response.setUpdated_at(order.getUpdated_at());
 
         return response;
     }
