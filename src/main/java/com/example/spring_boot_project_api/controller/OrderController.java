@@ -14,9 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.spring_boot_project_api.dto.request.InventoryRequest;
 import com.example.spring_boot_project_api.dto.request.OrderRequest;
-import com.example.spring_boot_project_api.dto.response.InventoryResponse;
 import com.example.spring_boot_project_api.dto.response.OrderResponse;
 import com.example.spring_boot_project_api.service.OrderService;
 

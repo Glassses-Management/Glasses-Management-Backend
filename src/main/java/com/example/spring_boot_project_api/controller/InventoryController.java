@@ -13,9 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.spring_boot_project_api.dto.request.BranchRequest;
 import com.example.spring_boot_project_api.dto.request.InventoryRequest;
-import com.example.spring_boot_project_api.dto.response.BranchResponse;
 import com.example.spring_boot_project_api.dto.response.InventoryResponse;
 import com.example.spring_boot_project_api.service.InventoryService;
 

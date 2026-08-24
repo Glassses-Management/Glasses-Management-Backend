@@ -14,9 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.spring_boot_project_api.dto.request.BranchRequest;
-import com.example.spring_boot_project_api.dto.request.CustomerRequest;
 import com.example.spring_boot_project_api.dto.response.BranchResponse;
-import com.example.spring_boot_project_api.dto.response.CustomerResponse;
 import com.example.spring_boot_project_api.service.BranchService;
 
 import jakarta.validation.Valid;

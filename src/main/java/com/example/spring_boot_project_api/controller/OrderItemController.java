@@ -15,9 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.spring_boot_project_api.dto.request.OrderItemRequest;
-import com.example.spring_boot_project_api.dto.request.ProductRequest;
 import com.example.spring_boot_project_api.dto.response.OrderItemResponse;
-import com.example.spring_boot_project_api.dto.response.ProductResponse;
 import com.example.spring_boot_project_api.service.OrderItemService;
 
 import jakarta.validation.Valid;
