@@ -15,7 +15,6 @@ public class UserMapper {
         user.setName(dto.getUserName());
         user.setEmail(dto.getEmail());
         user.setPassword_hash(dto.getPassword_hash());
-        user.setRole(dto.getRole());
 
         return user;
     }
@@ -26,10 +25,22 @@ public class UserMapper {
         response.setId(user.getId());
         response.setName(user.getName());
         response.setEmail(user.getEmail());
-        response.setRole(user.getRole());
+        response.setRole(user.getRole() != null ? user.getRole().name() : null);
         response.setBranch_id(user.getBranch() != null ? user.getBranch().getId() : null);
         response.setCreated_at(user.getCreatedAt());
         response.setUpdated_at(user.getUpdatedAt());
+
+        return response;
+    }
+
+    public UserResponse toSummaryResponse(User user){
+        UserResponse response = new UserResponse();
+
+        response.setId(user.getId());
+        response.setName(user.getName());
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole() != null ? user.getRole().name() : null);
+        response.setBranch_id(user.getBranch() != null ? user.getBranch().getId() : null);
 
         return response;
     }
