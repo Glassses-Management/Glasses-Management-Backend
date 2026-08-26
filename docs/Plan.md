@@ -71,6 +71,54 @@ VERIFICATION STEPS
 4. Call GET /api/user without token: expect 401
 5. Swagger Authorize button works with the token
 
+CURRENT TASK: QR CODE CUSTOMER SELF-REGISTRATION (NOT STARTED)
+
+Overview
+- Customer scans a QR code at the shop
+- QR opens a registration page in the browser (no frontend yet, backend serves HTML)
+- Customer fills in full profile and submits
+- Backend creates the customer record, auto-assigned to the branch from the QR code
+
+Flow
+  QR Code (PNG) → Customer scans → Opens browser → Registration form → Submit → Customer created
+
+Step 1. Add QR code library dependency
+- pom.xml: add com.google.zxing (core + javase) for QR code generation
+
+Step 2. QR code generation endpoint
+- GET /api/qr/branch/{branchId} → returns QR code as PNG image
+- QR encodes URL: http://localhost:8080/register?branch={branchId}
+- PermitAll (no auth needed to scan)
+
+Step 3. Serve registration HTML page
+- GET /register?branch={branchId} → returns simple HTML page with form
+- Fields: name, phone, email, address, date of birth
+- Form submits via JavaScript fetch to POST /api/customers/register
+- PermitAll
+
+Step 4. Public registration API endpoint
+- POST /api/customers/register → creates customer record
+- PermitAll in SecurityConfig (no JWT needed)
+- Validates unique phone and email (reuse existing logic in CustomerService)
+- Auto-assigns branch from query param
+
+Step 5. Update SecurityConfig
+- PermitAll for:
+  GET /api/qr/branch/**
+  GET /register
+  POST /api/customers/register
+
+New files to create:
+- service/QrCodeService.java (QR generation logic using ZXing)
+- controller/QrCodeController.java (GET /api/qr/branch/{branchId})
+- resources/templates/register.html (registration form page)
+- dto/request/CustomerRegisterRequest.java (name, phone, email, address, dateOfBirth)
+
+Modified files:
+- SecurityConfig.java (add permitAll rules)
+- CustomerController.java (add public registration endpoint)
+- pom.xml (add ZXing dependency)
+
 BACKLOG (FUTURE WORK AFTER SECURITY)
 
 Task 2. Business logic
