@@ -8,11 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.spring_boot_project_api.dto.request.PrescriptionRequest;
 import com.example.spring_boot_project_api.dto.response.PrescriptionResponse;
 import com.example.spring_boot_project_api.mapper.PrescriptionMapper;
-import com.example.spring_boot_project_api.model.Branch;
 import com.example.spring_boot_project_api.model.Customer;
 import com.example.spring_boot_project_api.model.Prescription;
 import com.example.spring_boot_project_api.model.User;
-import com.example.spring_boot_project_api.repository.BranchRepository;
 import com.example.spring_boot_project_api.repository.CustomerRepository;
 import com.example.spring_boot_project_api.repository.PrescriptionRepository;
 import com.example.spring_boot_project_api.repository.UserRepository;
@@ -24,18 +22,15 @@ public class PrescriptionService {
     private final PrescriptionRepository prescriptionRepository;
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
-    private final BranchRepository branchRepository;
     private final PrescriptionMapper prescriptionMapper;
 
     public PrescriptionService(PrescriptionRepository prescriptionRepository,
                                CustomerRepository customerRepository,
                                UserRepository userRepository,
-                               BranchRepository branchRepository,
                                PrescriptionMapper prescriptionMapper){
         this.prescriptionRepository = prescriptionRepository;
         this.customerRepository = customerRepository;
         this.userRepository = userRepository;
-        this.branchRepository = branchRepository;
         this.prescriptionMapper = prescriptionMapper;
     }
 
@@ -44,14 +39,10 @@ public class PrescriptionService {
         Customer customer = customerRepository.findById(request.getCustomer_id())
                             .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
 
-        Branch branch = branchRepository.findById(request.getBranch_id())
-                        .orElseThrow(() -> new EntityNotFoundException("Branch not found"));
-
         User user = resolveUser(request.getUser_id());
 
         Prescription prescription = prescriptionMapper.toEntity(request);
         prescription.setCustomer(customer);
-        prescription.setBranch(branch);
         prescription.setUser(user);
 
         Prescription saved = prescriptionRepository.save(prescription);
@@ -90,9 +81,6 @@ public class PrescriptionService {
         Customer customer = customerRepository.findById(request.getCustomer_id())
                             .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
 
-        Branch branch = branchRepository.findById(request.getBranch_id())
-                        .orElseThrow(() -> new EntityNotFoundException("Branch not found"));
-
         User user = resolveUser(request.getUser_id());
 
         prescription.setOd_sphere(request.getOd_sphere());
@@ -107,7 +95,6 @@ public class PrescriptionService {
         prescription.setPrescription_date(request.getPrescription_date());
 
         prescription.setCustomer(customer);
-        prescription.setBranch(branch);
         prescription.setUser(user);
 
         Prescription saved = prescriptionRepository.saveAndFlush(prescription);

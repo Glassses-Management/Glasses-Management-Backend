@@ -1,5 +1,6 @@
 package com.example.spring_boot_project_api.dto.request;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import jakarta.validation.constraints.NotEmpty;
@@ -14,9 +15,6 @@ public class OrderRequest {
     @NotNull(message = "Customer id is required")
     private Long customer_id;
 
-    @NotNull(message = "Branch id is required")
-    private Long branch_id;
-
     @NotEmpty(message = "Order must have at least one item")
     @Size(min = 1, message = "Order must have at least one item")
     private List<ItemRequest> items;
@@ -30,5 +28,16 @@ public class OrderRequest {
         @NotNull(message = "Quantity is required")
         @Positive(message = "Quantity must be greater than 0")
         private Integer quantity;
+
+        @Size(max = 50, message = "Lens type must be under 50 character")
+        private String len_type;
+
+        @Size(max = 50, message = "Lens coating must be under 50 character")
+        private String len_coating;
+
+        @Size(max = 50, message = "Lens index must be under 50 character")
+        private String len_index;
+
+        private BigDecimal len_price;
     }
 }

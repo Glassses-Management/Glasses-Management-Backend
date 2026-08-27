@@ -12,7 +12,6 @@ public class PrescriptionResponse {
     private Long id;
     private Long customer_id;
     private Long user_id;
-    private Long branch_id;
 
     private Float od_sphere;
     private Float od_cylinder;

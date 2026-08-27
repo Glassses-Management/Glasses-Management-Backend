@@ -34,10 +34,6 @@ public class Prescription {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "branch_id", nullable = false)
-    private Branch branch;
-
     // Right eye (OD)
     @Column(name = "od_sphere")
     private Float od_sphere;

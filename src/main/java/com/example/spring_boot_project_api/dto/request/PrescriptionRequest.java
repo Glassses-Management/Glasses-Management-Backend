@@ -16,9 +16,6 @@ public class PrescriptionRequest {
 
     private Long user_id;
 
-    @NotNull(message = "Branch id is require")
-    private Long branch_id;
-
     private Float od_sphere;
     private Float od_cylinder;
 

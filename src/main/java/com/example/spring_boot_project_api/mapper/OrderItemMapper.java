@@ -15,7 +15,9 @@ public class OrderItemMapper {
         orderItem.setQuantity(dto.getQuantity());
         orderItem.setLen_type(dto.getLen_type());
         orderItem.setLen_coating(dto.getLen_coating());
-        orderItem.setLen_index(dto.getLen_index());
+        if (dto.getLen_index() != null) {
+            orderItem.setLen_index(Float.parseFloat(dto.getLen_index()));
+        }
         orderItem.setLen_price(dto.getLen_price());
 
         return orderItem;
@@ -36,7 +38,7 @@ public class OrderItemMapper {
 
         response.setLen_type(orderItem.getLen_type());
         response.setLen_coating(orderItem.getLen_coating());
-        response.setLen_index(orderItem.getLen_index());
+        response.setLen_index(orderItem.getLen_index() != null ? String.valueOf(orderItem.getLen_index()) : null);
         response.setLen_price(orderItem.getLen_price());
 
         response.setUnit_price(orderItem.getUnit_price());

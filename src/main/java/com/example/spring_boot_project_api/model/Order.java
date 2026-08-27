@@ -1,5 +1,6 @@
 package com.example.spring_boot_project_api.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -36,10 +37,6 @@ public class Order {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "branch_id", nullable = false)
-    private Branch branch;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prescription_id")
     private Prescription prescription;
 
@@ -47,7 +44,7 @@ public class Order {
     private List<OrderItem> items = new ArrayList<>();
 
     @Column(name = "total")
-    private Float total;
+    private BigDecimal total;
 
     @Column(length = 20)
     private String status;

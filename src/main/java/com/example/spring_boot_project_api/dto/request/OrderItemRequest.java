@@ -1,5 +1,7 @@
 package com.example.spring_boot_project_api.dto.request;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -9,13 +11,13 @@ import lombok.Data;
 @Data
 public class OrderItemRequest {
 
-    @NotNull(message = "Order id is require")
+    @NotNull(message = "Order id is required")
     private Long order_id;
 
-    @NotNull(message = "Product id is require")
+    @NotNull(message = "Product id is required")
     private Long product_id;
 
-    @NotNull(message = "Quantity is require")
+    @NotNull(message = "Quantity is required")
     @Positive(message = "Quantity must be greater than 0")
     private Integer quantity;
 
@@ -25,9 +27,9 @@ public class OrderItemRequest {
     @Size(max = 50, message = "Lens coating must be under 50 character")
     private String len_coating;
 
-    @DecimalMin(value = "1.0", message = "Lens index must be at least 1.0")
-    private Float len_index;
+    @Size(max = 50, message = "Lens index must be under 50 character")
+    private String len_index;
 
-    @Positive(message = "Lens price must be greater than 0")
-    private Float len_price;
+    @DecimalMin(value = "0.0", inclusive = false, message = "Lens price must be greater than 0")
+    private BigDecimal len_price;
 }

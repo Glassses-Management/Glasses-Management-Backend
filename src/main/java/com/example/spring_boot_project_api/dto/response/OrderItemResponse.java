@@ -1,5 +1,6 @@
 package com.example.spring_boot_project_api.dto.response;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -16,11 +17,11 @@ public class OrderItemResponse {
 
     private String len_type;
     private String len_coating;
-    private Float len_index;
-    private Float len_price;
+    private String len_index;
+    private BigDecimal len_price;
 
-    private Float unit_price;
-    private Float total_price;
+    private BigDecimal unit_price;
+    private BigDecimal total_price;
 
     private LocalDateTime created_at;
 

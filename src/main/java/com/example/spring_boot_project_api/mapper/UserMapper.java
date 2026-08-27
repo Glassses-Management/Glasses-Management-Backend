@@ -26,7 +26,6 @@ public class UserMapper {
         response.setName(user.getName());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole() != null ? user.getRole().name() : null);
-        response.setBranch_id(user.getBranch() != null ? user.getBranch().getId() : null);
         response.setCreated_at(user.getCreatedAt());
         response.setUpdated_at(user.getUpdatedAt());
 
@@ -40,7 +39,6 @@ public class UserMapper {
         response.setName(user.getName());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole() != null ? user.getRole().name() : null);
-        response.setBranch_id(user.getBranch() != null ? user.getBranch().getId() : null);
 
         return response;
     }

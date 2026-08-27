@@ -51,11 +51,6 @@ public class InventoryController {
         return inventoryService.getLowStock();
     }
 
-    @GetMapping("/branch/{branchId}")
-    public List<InventoryResponse> getByBranch(@PathVariable Long branchId) {
-        return inventoryService.getByBranch(branchId);
-    }
-
     @GetMapping("/{id}")
     public InventoryResponse getById(@PathVariable Long id) {
         return inventoryService.getById(id);

@@ -11,9 +11,9 @@ import com.example.spring_boot_project_api.model.Inventory;
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
-    List<Inventory> findAllByBranch_Id(Long branchId);
+    List<Inventory> findAllByProductId(Long productId);
 
     List<Inventory> findByQuantityLessThanEqual(Integer quantity);
 
-    Optional<Inventory> findByProduct_IdAndBranch_Id(Long productId, Long branchId);
+    Optional<Inventory> findByProductId(Long productId);
 }

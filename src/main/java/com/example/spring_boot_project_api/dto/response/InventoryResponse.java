@@ -14,7 +14,6 @@ public class InventoryResponse {
     private Long product_id;
     private Integer quantity;
     private Integer reorder_threshold;
-    private Long branch_id;
 
     private LocalDateTime last_restocked_at;
     private LocalDateTime created_at;

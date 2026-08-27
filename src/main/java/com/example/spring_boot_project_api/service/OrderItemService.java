@@ -1,5 +1,6 @@
 package com.example.spring_boot_project_api.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -9,9 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.spring_boot_project_api.dto.request.OrderItemRequest;
 import com.example.spring_boot_project_api.dto.response.OrderItemResponse;
 import com.example.spring_boot_project_api.mapper.OrderItemMapper;
+import com.example.spring_boot_project_api.model.Inventory;
 import com.example.spring_boot_project_api.model.Order;
 import com.example.spring_boot_project_api.model.OrderItem;
 import com.example.spring_boot_project_api.model.Product;
+import com.example.spring_boot_project_api.repository.InventoryRepository;
 import com.example.spring_boot_project_api.repository.OrderItemRepository;
 import com.example.spring_boot_project_api.repository.OrderRepository;
 import com.example.spring_boot_project_api.repository.ProductRepository;
@@ -23,15 +26,18 @@ public class OrderItemService {
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
     private final OrderItemMapper orderItemMapper;
 
     public OrderItemService(OrderItemRepository orderItemRepository,
                             OrderRepository orderRepository,
                             ProductRepository productRepository,
+                            InventoryRepository inventoryRepository,
                             OrderItemMapper orderItemMapper){
         this.orderItemRepository = orderItemRepository;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
+        this.inventoryRepository = inventoryRepository;
         this.orderItemMapper = orderItemMapper;
     }
 
@@ -95,14 +101,30 @@ public class OrderItemService {
         Product product = productRepository.findById(request.getProduct_id())
                           .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-        Float unitPrice = product.getSale_price() != null ? product.getSale_price() : 0f;
-        Float lenPrice = request.getLen_price() != null ? request.getLen_price() : 0f;
+        Inventory inventory = inventoryRepository.findByProductId(product.getId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Inventory not found for product " + product.getId()));
+
+        if (inventory.getQuantity() < request.getQuantity()) {
+            throw new IllegalArgumentException(
+                    "Insufficient stock for product " + product.getId()
+                    + ". Available: " + inventory.getQuantity()
+                    + ", requested: " + request.getQuantity());
+        }
+
+        inventory.setQuantity(inventory.getQuantity() - request.getQuantity());
+        inventoryRepository.save(inventory);
+
+        BigDecimal unitPrice = product.getSale_price() != null
+                ? BigDecimal.valueOf(product.getSale_price())
+                : BigDecimal.ZERO;
+        BigDecimal lenPrice = request.getLen_price() != null ? request.getLen_price() : BigDecimal.ZERO;
 
         OrderItem orderItem = orderItemMapper.toEntity(request);
         orderItem.setOrder(order);
         orderItem.setProduct(product);
         orderItem.setUnit_price(unitPrice);
-        orderItem.setTotal_price((unitPrice + lenPrice) * request.getQuantity());
+        orderItem.setTotal_price(unitPrice.add(lenPrice).multiply(BigDecimal.valueOf(request.getQuantity())));
 
         return orderItem;
     }

@@ -25,7 +25,6 @@ public class InventoryMapper {
         response.setProduct_id(inventory.getProduct() != null ? inventory.getProduct().getId() : null);
         response.setQuantity(inventory.getQuantity());
         response.setReorder_threshold(inventory.getReorder_threshold());
-        response.setBranch_id(inventory.getBranch() != null ? inventory.getBranch().getId() : null);
         response.setLast_restocked_at(inventory.getLast_restocked_at());
         response.setCreated_at(inventory.getCreatedAt());
         response.setUpdated_at(inventory.getUpdatedAt());

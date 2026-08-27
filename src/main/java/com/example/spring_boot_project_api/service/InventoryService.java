@@ -9,10 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.spring_boot_project_api.dto.request.InventoryRequest;
 import com.example.spring_boot_project_api.dto.response.InventoryResponse;
 import com.example.spring_boot_project_api.mapper.InventoryMapper;
-import com.example.spring_boot_project_api.model.Branch;
 import com.example.spring_boot_project_api.model.Inventory;
 import com.example.spring_boot_project_api.model.Product;
-import com.example.spring_boot_project_api.repository.BranchRepository;
 import com.example.spring_boot_project_api.repository.InventoryRepository;
 import com.example.spring_boot_project_api.repository.ProductRepository;
 
@@ -22,14 +20,12 @@ import jakarta.persistence.EntityNotFoundException;
 public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
-    private final BranchRepository branchRepository;
     private final ProductRepository productRepository;
     private final InventoryMapper inventoryMapper;
 
-    public InventoryService(InventoryRepository inventoryRepository, BranchRepository branchRepository,
+    public InventoryService(InventoryRepository inventoryRepository,
             ProductRepository productRepository, InventoryMapper inventoryMapper) {
         this.inventoryRepository = inventoryRepository;
-        this.branchRepository = branchRepository;
         this.productRepository = productRepository;
         this.inventoryMapper = inventoryMapper;
     }
@@ -38,11 +34,9 @@ public class InventoryService {
     public InventoryResponse create(InventoryRequest request) {
         Product product = getProduct(request.getProduct_id());
         ensureProductNotDuplicated(request, null);
-        Branch branch = getBranch(request.getBranch_id());
 
         Inventory inventory = inventoryMapper.toEntity(request);
         inventory.setProduct(product);
-        inventory.setBranch(branch);
         inventory.setLast_restocked_at(LocalDateTime.now());
 
         return inventoryMapper.toCreatedAtResponse(inventoryRepository.save(inventory));
@@ -59,9 +53,8 @@ public class InventoryService {
     }
 
     @Transactional(readOnly = true)
-    public List<InventoryResponse> getByBranch(Long branchId) {
-        getBranch(branchId);
-        return inventoryRepository.findAllByBranch_Id(branchId).stream()
+    public List<InventoryResponse> getByProductId(Long productId) {
+        return inventoryRepository.findAllByProductId(productId).stream()
                 .map(inventoryMapper::toCreatedAtResponse)
                 .toList();
     }
@@ -79,14 +72,12 @@ public class InventoryService {
         Inventory inventory = getEntity(id);
         Product product = getProduct(request.getProduct_id());
         ensureProductNotDuplicated(request, inventory);
-        Branch branch = getBranch(request.getBranch_id());
 
         boolean restocked = request.getQuantity() > inventory.getQuantity();
 
         inventory.setProduct(product);
         inventory.setQuantity(request.getQuantity());
         inventory.setReorder_threshold(request.getReorder_threshold());
-        inventory.setBranch(branch);
 
         if (restocked) {
             inventory.setLast_restocked_at(LocalDateTime.now());
@@ -105,27 +96,16 @@ public class InventoryService {
                 .orElseThrow(() -> new EntityNotFoundException("Inventory item not found"));
     }
 
-    private Branch getBranch(Long branchId) {
-        return branchRepository.findById(branchId)
-                .orElseThrow(() -> new EntityNotFoundException("Branch not found"));
-    }
-
     private Product getProduct(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
     }
 
     private void ensureProductNotDuplicated(InventoryRequest request, Inventory current) {
-        Long branchId = current != null && request.getBranch_id() == null
-                ? current.getBranch().getId()
-                : request.getBranch_id();
-        if (branchId == null) {
-            return;
-        }
-        inventoryRepository.findByProduct_IdAndBranch_Id(request.getProduct_id(), branchId)
+        inventoryRepository.findByProductId(request.getProduct_id())
                 .ifPresent(existing -> {
                     if (current == null || !existing.getId().equals(current.getId())) {
-                        throw new IllegalArgumentException("This product already exists in the branch inventory");
+                        throw new IllegalArgumentException("This product already exists in the inventory");
                     }
                 });
     }

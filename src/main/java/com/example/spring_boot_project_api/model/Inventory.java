@@ -29,10 +29,6 @@ public class Inventory {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "branch_id")
-    private Branch branch;
-
     @Column(nullable = false)
     private Integer quantity;
 

@@ -24,7 +24,6 @@ public class AppointmentMapper {
 
         response.setId(appointment.getId());
         response.setCustomer_id(appointment.getCustomer() != null ? appointment.getCustomer().getId() : null);
-        response.setBranch_id(appointment.getBranch() != null ? appointment.getBranch().getId() : null);
         response.setOptometrist_id(appointment.getOptometrist() != null ? appointment.getOptometrist().getId() : null);
         response.setScheduled_at(appointment.getScheduledAt());
         response.setStatus(appointment.getStatus());

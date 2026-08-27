@@ -53,7 +53,6 @@ public class JwtService {
                 .subject(user.getEmail())
                 .claim("uid", user.getId())
                 .claim("role", user.getRole() != null ? user.getRole().name() : null)
-                .claim("branch_id", user.getBranch() != null ? user.getBranch().getId() : null)
                 .issueTime(Date.from(now))
                 .expirationTime(Date.from(expiresAt))
                 .build();

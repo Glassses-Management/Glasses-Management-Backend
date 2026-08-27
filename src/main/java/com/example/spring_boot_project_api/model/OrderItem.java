@@ -1,5 +1,6 @@
 package com.example.spring_boot_project_api.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -43,13 +44,13 @@ public class OrderItem {
     private Float len_index;
 
     @Column(name = "len_price")
-    private Float len_price;
+    private BigDecimal len_price;
 
     @Column(name = "unit_price")
-    private Float unit_price;
+    private BigDecimal unit_price;
 
     @Column(name = "total_price")
-    private Float total_price;
+    private BigDecimal total_price;
 
     @Column(name = "created_at")
     private LocalDateTime created_at;

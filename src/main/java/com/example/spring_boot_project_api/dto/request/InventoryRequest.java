@@ -19,8 +19,4 @@ public class InventoryRequest {
     @NotNull(message = "Reorder threshold is required")
     @Min(value = 0, message = "Reorder threshold cannot be negative")
     private Integer reorder_threshold;
-
-    @NotNull(message = "Branch ID is required")
-    @Positive(message = "Branch ID must be greater than 0")
-    private Long branch_id;
 }

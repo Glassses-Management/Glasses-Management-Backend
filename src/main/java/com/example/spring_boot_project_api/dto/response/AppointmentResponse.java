@@ -8,7 +8,6 @@ import lombok.Data;
 public class AppointmentResponse {
     private Long id;
     private Long customer_id;
-    private Long branch_id;
     private Long optometrist_id;
 
     private LocalDateTime scheduled_at;

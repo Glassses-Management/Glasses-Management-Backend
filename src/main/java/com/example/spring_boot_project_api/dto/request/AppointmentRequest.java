@@ -14,9 +14,6 @@ public class AppointmentRequest {
     @NotNull(message = "Customer id is required")
     private Long customer_id;
 
-    @NotNull(message = "Branch id is required")
-    private Long branch_id;
-
     private Long optometrist_id;
 
     @NotNull(message = "Scheduled time is required")

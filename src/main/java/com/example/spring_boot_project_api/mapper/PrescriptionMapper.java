@@ -36,7 +36,6 @@ public class PrescriptionMapper {
         response.setId(prescription.getId());
         response.setCustomer_id(prescription.getCustomer() != null ? prescription.getCustomer().getId() : null);
         response.setUser_id(prescription.getUser() != null ? prescription.getUser().getId() : null);
-        response.setBranch_id(prescription.getBranch() != null ? prescription.getBranch().getId() : null);
 
         response.setOd_sphere(prescription.getOd_sphere());
         response.setOd_cylinder(prescription.getOd_cylinder());

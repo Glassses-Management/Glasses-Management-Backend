@@ -5,9 +5,7 @@ import java.util.List;
 import com.example.spring_boot_project_api.dto.request.UserRequest;
 import com.example.spring_boot_project_api.dto.response.UserResponse;
 import com.example.spring_boot_project_api.mapper.UserMapper;
-import com.example.spring_boot_project_api.model.Branch;
 import com.example.spring_boot_project_api.model.User;
-import com.example.spring_boot_project_api.repository.BranchRepository;
 import com.example.spring_boot_project_api.repository.UserRepository;
 
 import jakarta.persistence.EntityExistsException;
@@ -22,11 +20,9 @@ import com.example.spring_boot_project_api.model.Role;
 public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
-    BranchRepository branchRepository;
     PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, UserMapper userMapper, BranchRepository branchRepository, PasswordEncoder passwordEncoder){
-        this.branchRepository = branchRepository;
+    public UserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder){
         this.userMapper = userMapper;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -34,11 +30,7 @@ public class UserService {
 
     @Transactional
     public UserResponse create(UserRequest request){
-        Branch branch = branchRepository.findById(request.getBranch_id()).
-                    orElseThrow(() -> new EntityExistsException("Branch id not found"));
-
         User user = userMapper.toEntity(request);
-        user.setBranch(branch);
         user.setPassword_hash(passwordEncoder.encode(request.getPassword_hash()));
         user.setRole(parseRole(request.getRole()));
 
@@ -59,14 +51,10 @@ public class UserService {
     public UserResponse update(Long id, UserRequest request){
         User user = getEntity(id);
 
-        Branch branch = branchRepository.findById(request.getBranch_id()).
-                        orElseThrow(() -> new EntityExistsException("Branch id not found"));
-
         user.setName(request.getUserName());
         user.setEmail(request.getEmail());
         user.setPassword_hash(passwordEncoder.encode(request.getPassword_hash()));
         user.setRole(parseRole(request.getRole()));
-        user.setBranch(branch);
 
         return userMapper.toUpdatedAtResponse(userRepository.save(user));
     }

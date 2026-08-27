@@ -9,11 +9,9 @@ import com.example.spring_boot_project_api.dto.request.AppointmentRequest;
 import com.example.spring_boot_project_api.dto.response.AppointmentResponse;
 import com.example.spring_boot_project_api.mapper.AppointmentMapper;
 import com.example.spring_boot_project_api.model.Appointment;
-import com.example.spring_boot_project_api.model.Branch;
 import com.example.spring_boot_project_api.model.Customer;
 import com.example.spring_boot_project_api.model.User;
 import com.example.spring_boot_project_api.repository.AppointmentRepository;
-import com.example.spring_boot_project_api.repository.BranchRepository;
 import com.example.spring_boot_project_api.repository.CustomerRepository;
 import com.example.spring_boot_project_api.repository.UserRepository;
 
@@ -23,18 +21,15 @@ import jakarta.persistence.EntityNotFoundException;
 public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final CustomerRepository customerRepository;
-    private final BranchRepository branchRepository;
     private final UserRepository userRepository;
     private final AppointmentMapper appointmentMapper;
 
     public AppointmentService(AppointmentRepository appointmentRepository,
                               CustomerRepository customerRepository,
-                              BranchRepository branchRepository,
                               UserRepository userRepository,
                               AppointmentMapper appointmentMapper) {
         this.appointmentRepository = appointmentRepository;
         this.customerRepository = customerRepository;
-        this.branchRepository = branchRepository;
         this.userRepository = userRepository;
         this.appointmentMapper = appointmentMapper;
     }
@@ -44,9 +39,6 @@ public class AppointmentService {
         Customer customer = customerRepository.findById(request.getCustomer_id())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
 
-        Branch branch = branchRepository.findById(request.getBranch_id())
-                .orElseThrow(() -> new EntityNotFoundException("Branch not found"));
-
         User optometrist = null;
         if (request.getOptometrist_id() != null) {
             optometrist = userRepository.findById(request.getOptometrist_id())
@@ -55,7 +47,6 @@ public class AppointmentService {
 
         Appointment appointment = appointmentMapper.toEntity(request);
         appointment.setCustomer(customer);
-        appointment.setBranch(branch);
         appointment.setOptometrist(optometrist);
 
         return appointmentMapper.toResponse(appointmentRepository.save(appointment));
@@ -78,9 +69,6 @@ public class AppointmentService {
         Customer customer = customerRepository.findById(request.getCustomer_id())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
 
-        Branch branch = branchRepository.findById(request.getBranch_id())
-                .orElseThrow(() -> new EntityNotFoundException("Branch not found"));
-
         User optometrist = null;
         if (request.getOptometrist_id() != null) {
             optometrist = userRepository.findById(request.getOptometrist_id())
@@ -88,7 +76,6 @@ public class AppointmentService {
         }
 
         appointment.setCustomer(customer);
-        appointment.setBranch(branch);
         appointment.setOptometrist(optometrist);
         appointment.setScheduledAt(request.getScheduled_at());
         appointment.setStatus(request.getStatus());

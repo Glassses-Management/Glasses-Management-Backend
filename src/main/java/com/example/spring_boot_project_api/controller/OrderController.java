@@ -45,13 +45,9 @@ public class OrderController {
     @GetMapping
     public List<OrderResponse> getAll(
             @RequestParam(required = false) Long customerId,
-            @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) String status) {
         if (customerId != null) {
             return orderService.getByCustomerId(customerId);
-        }
-        if (branchId != null) {
-            return orderService.getByBranchId(branchId);
         }
         if (status != null && !status.isBlank()) {
             return orderService.getByStatus(status);

@@ -2,7 +2,6 @@ package com.example.spring_boot_project_api.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -26,9 +25,6 @@ public class UserRequest {
         message = "Password must contain at least one letter and one number"
     )
     private String password_hash;
-
-    @NotNull(message = "Branch ID is required")
-    private Long branch_id;
 
     @NotBlank(message = "Role is required")
     private String role;
