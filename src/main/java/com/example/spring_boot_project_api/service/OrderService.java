@@ -5,7 +5,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -131,17 +135,39 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderResponse> getByCustomerId(Long customerId) {
-        return orderRepository.findByCustomerId(customerId).stream()
-                .map(orderMapper::toResponse)
-                .toList();
+    public Page<OrderResponse> search(Long customerId, String status,
+                                      LocalDate dateFrom, LocalDate dateTo,
+                                      Pageable pageable) {
+        assertSortAllowed(pageable, Set.of("id", "order_date", "status", "created_at", "updated_at"));
+
+        if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
+            throw new IllegalArgumentException("dateFrom must not be after dateTo");
+        }
+
+        Specification<Order> spec = (root, query, cb) -> cb.conjunction();
+
+        if (customerId != null) {
+            spec = spec.and((root, q, cb) -> cb.equal(root.get("customer").get("id"), customerId));
+        }
+        if (status != null && !status.isBlank()) {
+            spec = spec.and((root, q, cb) -> cb.equal(cb.lower(root.get("status")), status.toLowerCase()));
+        }
+        if (dateFrom != null) {
+            spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("order_date"), dateFrom));
+        }
+        if (dateTo != null) {
+            spec = spec.and((root, q, cb) -> cb.lessThanOrEqualTo(root.get("order_date"), dateTo));
+        }
+
+        return orderRepository.findAll(spec, pageable).map(orderMapper::toResponse);
     }
 
-    @Transactional(readOnly = true)
-    public List<OrderResponse> getByStatus(String status) {
-        return orderRepository.findByStatus(status).stream()
-                .map(orderMapper::toResponse)
-                .toList();
+    private void assertSortAllowed(Pageable pageable, Set<String> allowed) {
+        pageable.getSort().forEach(order -> {
+            if (!allowed.contains(order.getProperty())) {
+                throw new IllegalArgumentException("Sorting by '" + order.getProperty() + "' is not allowed");
+            }
+        });
     }
 
     @Transactional

@@ -26,19 +26,43 @@ git init
 ### Prerequisites
 
 - JDK 21
-- MySQL running locally (or update `src/main/resources/application.properties` to point at
-  your instance)
+- MySQL running locally (or update `.env` to point at your instance)
 
 ### Configure the database
 
-Add your MySQL connection details to `src/main/resources/application.properties`:
+All configuration is loaded from a local `.env` file via
+`spring.config.import` in `src/main/resources/application.properties`. The file
+`.env` is gitignored, so **every developer keeps their own private copy** — your
+friend connects to her own database without touching shared code.
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/your_db_name
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-spring.jpa.hibernate.ddl-auto=update
-```
+1. Create an empty MySQL database (e.g. `glasses_management`).
+2. Copy the template and edit it with your own values:
+
+   ```bash
+   cp .env.example .env        # Windows: copy .env.example .env
+   ```
+
+   ```properties
+   # .env  (do NOT commit this file)
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_NAME=glasses_management
+   DB_USERNAME=root
+   DB_PASSWORD=yourpassword
+
+   JWT_SECRET=generate-your-own   # openssl rand -base64 32
+   JWT_EXPIRATION_MINUTES=60
+
+   ADMIN_EMAIL=admin@example.com
+   ADMIN_PASSWORD=admin123
+   ```
+
+On startup, `spring.jpa.hibernate.ddl-auto=update` auto-creates the tables from
+the JPA entities, and `AdminConfig` seeds the admin account from
+`ADMIN_EMAIL`/`ADMIN_PASSWORD`. A fresh database needs no manual SQL.
+
+> Note: `DATABASE_MIGRATION.sql` is only for fixing an *already-existing* database
+> that has stale columns. Skip it when starting a new database.
 
 ### Run
 
