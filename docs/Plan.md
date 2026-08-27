@@ -1,11 +1,18 @@
 PLAN.MD
 Optical Shop Management System - Backend Roadmap
 
-STATUS: CRUD complete for all modules (Branch, User, Customer, Product,
-Inventory, Appointment, Prescription, Order, OrderItem).
-Current task: Security and JWT authentication.
+STATUS: CRUD complete for all modules except Branch.
+Branch module was removed. There is no Branch entity and no branch_id column
+on any table. Any text in this file that says "filter by branch" is no longer
+valid. Update those references when you read this file.
 
-CURRENT TASK: AUTHENTICATION AND AUTHORIZATION (IN PROGRESS)
+Completed work:
+- CRUD for User, Customer, Product, Inventory, Appointment, Prescription, Order, OrderItem
+- Security and JWT authentication (auth endpoints, token, role checks, error handling)
+
+Current task: PAGINATION, FILTERING AND SEARCH (backend)
+This was moved ahead of the QR code task. See the section at the bottom of
+this file for the full plan.
 
 Step 1. Dependencies (pom.xml)
 - Add spring-boot-starter-security
@@ -71,7 +78,7 @@ VERIFICATION STEPS
 4. Call GET /api/user without token: expect 401
 5. Swagger Authorize button works with the token
 
-CURRENT TASK: QR CODE CUSTOMER SELF-REGISTRATION (NOT STARTED)
+CURRENT TASK: QR CODE CUSTOMER SELF-REGISTRATION (NOT STARTED - deferred, do pagination first)
 
 Overview
 - Customer scans a QR code at the shop
@@ -120,15 +127,76 @@ Modified files:
 - pom.xml (add ZXing dependency)
 
 BACKLOG (FUTURE WORK AFTER SECURITY)
-
 Task 2. Business logic
 - Placing an Order decrements Inventory atomically
 - Prevent double booking of Appointments
 - Order status lifecycle transitions
 
-Task 3. Pagination and filtering
-- Pageable list endpoints for Customers, Orders, Products
-- Search filters by branch, status, date range, customer
+Task 3. Pagination, Filtering and Search (NOW IN PROGRESS)
+
+Goal
+  Add pageable list endpoints for Customers, Orders and Products. Each returns a
+  Spring Page object with the content list plus page metadata (total count, page
+  number, page size). Replace the old endpoints that returned the full list.
+
+Where the work happens
+  Filtering and search are done on the backend, not in the frontend. The
+  frontend sends query parameters. The backend runs them as database queries and
+  returns only the matching page. The frontend only renders the result.
+
+Filtering versus searching
+  Filtering means exact or range checks on known fields (for example status
+  equals a value, or a date is between two dates).
+  Searching means free text matching across text columns (for example name
+  contains a word).
+  Both are built the same way on the backend but they are different kinds of
+  checks.
+
+Filters for each resource (only fields that exist in the data model)
+
+Customers
+  - search by name, phone, email (text match, not case sensitive)
+  - filter by created date range (from date, to date)
+
+Orders
+  - filter by status (for example PENDING_REVIEW, CONFIRMED, IN_PROGRESS,
+    READY_FOR_PICKUP, COMPLETED)
+  - filter by customer id
+  - filter by order date range (from date, to date)
+
+Products
+  - filter by category
+  - search by brand, model
+  - free text search across sku, model, brand
+
+Pagination
+  - page number, page size and sort field are sent by the frontend
+  - backend returns one page at a time
+
+Branch filtering
+  - Removed. There is no Branch entity, so do not add branch filters.
+
+Why this is needed
+  - The frontend plan requires search and filter on all tables.
+  - Staff need to find products and filter orders by status during daily work.
+  - Returning the full list breaks the UI tables and the dashboard recent orders widget.
+
+When to build
+  - Now, before the frontend CRUD and polish phases, so the API contract is stable.
+
+Frontend contract note
+  - The frontend types currently show list endpoints returning a plain array.
+  - After this change the response becomes a Page object. Update the frontend
+    types to wrap the list when that work starts.
+
+Implementation notes (backend only, no code written yet)
+  - Repositories extend JpaSpecificationExecutor.
+  - Services build a Specification from the optional filters and call findAll
+    with a Pageable, then map results to the response DTO.
+  - Controllers accept the filter query params and a Pageable, and return a Page.
+  - Keep get by id and create, update, delete endpoints unchanged.
+  - Remove the old order filter branching that used customerId and status.
+  - Verify with ./mvnw compile -q after changes.
 
 Task 4. Tests
 - Unit tests for services
