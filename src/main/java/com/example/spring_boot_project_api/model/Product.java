@@ -1,5 +1,6 @@
 package com.example.spring_boot_project_api.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -30,8 +31,8 @@ public class Product {
     private String material;
     private String size;
 
-    private Float cost_price;
-    private Float sale_price;
+    private BigDecimal cost_price;
+    private BigDecimal sale_price;
 
     private String supplier_name;
     private String supplier_contact;

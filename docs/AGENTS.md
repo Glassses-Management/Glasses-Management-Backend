@@ -5,7 +5,7 @@ Instructions for AI coding agents working on this repository.
 ## Project Overview
 
 Backend REST API for an **Optical Shop Management System**. Manages customers,
-staff users, branches, products, inventory, appointments, prescriptions, and orders.
+staff users, products, inventory, appointments, prescriptions, and orders.
 See `agent_guide_ai.md` for the business workflow diagrams.
 
 ## Tech Stack
@@ -32,7 +32,7 @@ Base package: `com.example.spring_boot_project_api`
 
 ```
 src/main/java/com/example/spring_boot_project_api/
-├── model/          # JPA entities (Branch, User, Customer)
+├── model/          # JPA entities (User, Customer, Product, etc.)
 ├── dto/
 │   ├── request/    # incoming payloads, bean-validation annotated
 │   └── response/   # outgoing payloads, never expose secrets
@@ -74,6 +74,5 @@ src/main/java/com/example/spring_boot_project_api/
 
 ## Known Quirks
 
-- `Branch.createdAt` is `LocalTime`; consider `LocalDateTime` if timestamps need dates.
 - Some entities carry unused Hibernate imports (`ManyToAny`, `FetchClauseType`) left over
   from IDE auto-imports.

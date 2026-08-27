@@ -1,5 +1,7 @@
 package com.example.spring_boot_project_api.dto.request;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -32,11 +34,11 @@ public class ProductRequest {
 
     @NotNull(message = "Cost price is require")
     @Positive(message = "Cost price must be greater than 0")
-    private Float cost_price;
+    private BigDecimal cost_price;
 
     @NotNull(message = "Sale price is require")
     @Positive(message = "Sale price must be greater than 0")
-    private Float sale_price;
+    private BigDecimal sale_price;
 
     @Size(max = 100, message = "Supplier name must be under 100 character")
     private String supplier_name;

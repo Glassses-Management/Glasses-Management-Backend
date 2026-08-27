@@ -69,7 +69,7 @@ public class OrderService {
                             "Product not found with id: " + itemRequest.getProduct_id()));
 
             BigDecimal unitPrice = product.getSale_price() != null
-                    ? BigDecimal.valueOf(product.getSale_price())
+                    ? product.getSale_price()
                     : BigDecimal.ZERO;
             BigDecimal lenPrice = itemRequest.getLen_price() != null
                     ? itemRequest.getLen_price()

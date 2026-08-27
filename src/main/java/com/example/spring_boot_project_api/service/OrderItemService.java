@@ -116,7 +116,7 @@ public class OrderItemService {
         inventoryRepository.save(inventory);
 
         BigDecimal unitPrice = product.getSale_price() != null
-                ? BigDecimal.valueOf(product.getSale_price())
+                ? product.getSale_price()
                 : BigDecimal.ZERO;
         BigDecimal lenPrice = request.getLen_price() != null ? request.getLen_price() : BigDecimal.ZERO;
 
