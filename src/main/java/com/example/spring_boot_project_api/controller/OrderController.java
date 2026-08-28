@@ -66,6 +66,11 @@ public class OrderController {
         return orderService.update(id, request);
     }
 
+    @PostMapping("/{id}/status")
+    public OrderResponse changeStatus(@PathVariable Long id, @RequestParam String status) {
+        return orderService.changeStatus(id, status);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         orderService.delete(id);

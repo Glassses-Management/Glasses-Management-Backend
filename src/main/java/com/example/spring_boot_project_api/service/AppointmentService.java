@@ -1,5 +1,6 @@
 package com.example.spring_boot_project_api.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -48,6 +49,7 @@ public class AppointmentService {
         Appointment appointment = appointmentMapper.toEntity(request);
         appointment.setCustomer(customer);
         appointment.setOptometrist(optometrist);
+        assertNoDoubleBooking(null, request.getOptometrist_id(), request.getScheduled_at());
 
         return appointmentMapper.toResponse(appointmentRepository.save(appointment));
     }
@@ -80,6 +82,7 @@ public class AppointmentService {
         appointment.setScheduledAt(request.getScheduled_at());
         appointment.setStatus(request.getStatus());
         appointment.setNotes(request.getNotes());
+        assertNoDoubleBooking(id, request.getOptometrist_id(), request.getScheduled_at());
 
         return appointmentMapper.toResponse(appointmentRepository.save(appointment));
     }
@@ -91,5 +94,17 @@ public class AppointmentService {
     private Appointment getEntity(Long id) {
         return appointmentRepository.findById(id)
                .orElseThrow(() -> new EntityNotFoundException("Appointment not found"));
+    }
+
+    private void assertNoDoubleBooking(Long id, Long optometristId, LocalDateTime scheduledAt) {
+        if (optometristId == null) {
+            return;
+        }
+        boolean conflict = id == null
+                ? appointmentRepository.existsByOptometristIdAndScheduledAt(optometristId, scheduledAt)
+                : appointmentRepository.existsByOptometristIdAndScheduledAtAndIdNot(optometristId, scheduledAt, id);
+        if (conflict) {
+            throw new IllegalArgumentException("The optometrist already has an appointment at this time");
+        }
     }
 }

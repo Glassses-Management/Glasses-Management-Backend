@@ -159,4 +159,46 @@ class OrderServiceTest {
         verify(inventoryRepository, times(1)).save(inventory);
         verify(orderRepository, times(1)).delete(order);
     }
+
+    private Order orderWithStatus(String status) {
+        Order order = new Order();
+        order.setId(1L);
+        order.setStatus(status);
+        return order;
+    }
+
+    @Test
+    void changeStatus_allowsValidTransition() {
+        Order order = orderWithStatus("PENDING");
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+        when(orderMapper.toResponse(order)).thenReturn(new OrderResponse());
+
+        orderService.changeStatus(1L, "CONFIRMED");
+
+        assertThat(order.getStatus()).isEqualTo("CONFIRMED");
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    void changeStatus_rejectsInvalidTransition() {
+        Order order = orderWithStatus("PENDING");
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.changeStatus(1L, "COMPLETED"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Cannot transition");
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void changeStatus_rejectsUnknownStatus() {
+        Order order = orderWithStatus("PENDING");
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.changeStatus(1L, "FOO"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid order status");
+        verify(orderRepository, never()).save(any());
+    }
 }
