@@ -6,6 +6,7 @@ import javax.crypto.SecretKey;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
@@ -43,13 +44,13 @@ public class SecurityConfig {
     }
 
     @Bean
+    @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login").permitAll()
-                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth -> oauth
                 .jwt(jwt -> jwt.jwtAuthenticationConverter(roleClaimConverter()))
@@ -58,6 +59,18 @@ public class SecurityConfig {
                 .authenticationEntryPoint(unauthorizedEntryPoint())
                 .accessDeniedHandler(forbiddenAccessDeniedHandler()));
 
+        return http.build();
+    }
+
+    @Bean
+    @Order(1)
+    public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher("/swagger-ui/**", "/swagger-ui.html",
+                    "/v3/api-docs", "/v3/api-docs/**",
+                    "/swagger-resources/**", "/webjars/**")
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return http.build();
     }
 

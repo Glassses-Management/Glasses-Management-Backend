@@ -1,7 +1,13 @@
 package com.example.spring_boot_project_api.service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +42,48 @@ public class CustomerService {
     @Transactional(readOnly = true)
     public List<CustomerResponse> getAll() {
         return customerRepository.findAll().stream().map(customerMapper::toCreatedAtResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CustomerResponse> search(String name, String phone, String email,
+                                         LocalDate createdFrom, LocalDate createdTo,
+                                         Pageable pageable) {
+        assertSortAllowed(pageable, Set.of("id", "name", "createdAt", "updatedAt"));
+
+        if (createdFrom != null && createdTo != null && createdFrom.isAfter(createdTo)) {
+            throw new IllegalArgumentException("createdFrom must not be after createdTo");
+        }
+
+        Specification<Customer> spec = (root, query, cb) -> cb.conjunction();
+
+        if (name != null && !name.isBlank()) {
+            String like = "%" + name.toLowerCase() + "%";
+            spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("name")), like));
+        }
+        if (phone != null && !phone.isBlank()) {
+            String like = "%" + phone.toLowerCase() + "%";
+            spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("phone")), like));
+        }
+        if (email != null && !email.isBlank()) {
+            String like = "%" + email.toLowerCase() + "%";
+            spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("email")), like));
+        }
+        if (createdFrom != null) {
+            spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), createdFrom.atStartOfDay()));
+        }
+        if (createdTo != null) {
+            spec = spec.and((root, q, cb) -> cb.lessThanOrEqualTo(root.get("createdAt"), createdTo.atTime(LocalTime.MAX)));
+        }
+
+        return customerRepository.findAll(spec, pageable).map(customerMapper::toCreatedAtResponse);
+    }
+
+    private void assertSortAllowed(Pageable pageable, Set<String> allowed) {
+        pageable.getSort().forEach(order -> {
+            if (!allowed.contains(order.getProperty())) {
+                throw new IllegalArgumentException("Sorting by '" + order.getProperty() + "' is not allowed");
+            }
+        });
     }
 
     @Transactional(readOnly = true)

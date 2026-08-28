@@ -1,7 +1,11 @@
 package com.example.spring_boot_project_api.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -43,16 +47,13 @@ public class OrderController {
     }
 
     @GetMapping
-    public List<OrderResponse> getAll(
+    public Page<OrderResponse> search(
             @RequestParam(required = false) Long customerId,
-            @RequestParam(required = false) String status) {
-        if (customerId != null) {
-            return orderService.getByCustomerId(customerId);
-        }
-        if (status != null && !status.isBlank()) {
-            return orderService.getByStatus(status);
-        }
-        return orderService.getAll();
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            Pageable pageable) {
+        return orderService.search(customerId, status, dateFrom, dateTo, pageable);
     }
 
     @GetMapping("/{id}")

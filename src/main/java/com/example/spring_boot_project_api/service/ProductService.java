@@ -1,7 +1,11 @@
 package com.example.spring_boot_project_api.service;
 
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +42,43 @@ public class ProductService {
     @Transactional(readOnly = true)
     public List<ProductResponse> getAll(){
         return productRepository.findAll().stream().map(productMapper::toCreatedAtResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> search(String category, String brand, String model,
+                                       String search, Pageable pageable) {
+        assertSortAllowed(pageable, Set.of("id", "sku", "model", "brand", "category", "sale_price", "createdAt", "updatedAt"));
+
+        Specification<Product> spec = (root, query, cb) -> cb.conjunction();
+
+        if (category != null && !category.isBlank()) {
+            spec = spec.and((root, q, cb) -> cb.equal(cb.lower(root.get("category")), category.toLowerCase()));
+        }
+        if (brand != null && !brand.isBlank()) {
+            String like = "%" + brand.toLowerCase() + "%";
+            spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("brand")), like));
+        }
+        if (model != null && !model.isBlank()) {
+            String like = "%" + model.toLowerCase() + "%";
+            spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("model")), like));
+        }
+        if (search != null && !search.isBlank()) {
+            String like = "%" + search.toLowerCase() + "%";
+            spec = spec.and((root, q, cb) -> cb.or(
+                    cb.like(cb.lower(root.get("sku")), like),
+                    cb.like(cb.lower(root.get("model")), like),
+                    cb.like(cb.lower(root.get("brand")), like)));
+        }
+
+        return productRepository.findAll(spec, pageable).map(productMapper::toResponse);
+    }
+
+    private void assertSortAllowed(Pageable pageable, Set<String> allowed) {
+        pageable.getSort().forEach(order -> {
+            if (!allowed.contains(order.getProperty())) {
+                throw new IllegalArgumentException("Sorting by '" + order.getProperty() + "' is not allowed");
+            }
+        });
     }
 
     @Transactional(readOnly = true)
