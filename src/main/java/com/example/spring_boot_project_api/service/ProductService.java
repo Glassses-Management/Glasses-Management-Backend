@@ -47,7 +47,7 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<ProductResponse> search(String category, String brand, String model,
                                        String search, Pageable pageable) {
-        assertSortAllowed(pageable, Set.of("id", "sku", "model", "brand", "category", "sale_price", "created_at", "updated_at"));
+        assertSortAllowed(pageable, Set.of("id", "sku", "model", "brand", "category", "sale_price", "createdAt", "updatedAt"));
 
         Specification<Product> spec = (root, query, cb) -> cb.conjunction();
 
