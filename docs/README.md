@@ -57,12 +57,14 @@ friend connects to her own database without touching shared code.
    ADMIN_PASSWORD=admin123
    ```
 
-On startup, `spring.jpa.hibernate.ddl-auto=update` auto-creates the tables from
-the JPA entities, and `AdminConfig` seeds the admin account from
-`ADMIN_EMAIL`/`ADMIN_PASSWORD`. A fresh database needs no manual SQL.
+On startup, Flyway runs the migration file `src/main/resources/db/migration/V1__init_schema.sql`
+and creates the tables. Hibernate now uses `ddl-auto=validate`, which means it only
+checks the schema matches the entities, it does not change the database.
+`AdminUserSeeder` creates the first admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD`.
+A fresh database needs no manual SQL.
 
-> Note: `DATABASE_MIGRATION.sql` is only for fixing an *already-existing* database
-> that has stale columns. Skip it when starting a new database.
+Note: `DATABASE_MIGRATION.sql` is only for fixing an already-existing database that
+has stale columns. Skip it when starting a new database.
 
 ### Run
 
@@ -72,6 +74,27 @@ the JPA entities, and `AdminConfig` seeds the admin account from
 
 The API will be available at `http://localhost:8080`, and Swagger UI at
 `http://localhost:8080/swagger-ui.html`.
+
+### Run with Docker
+
+This project includes a Dockerfile and a docker-compose.yml. They start the backend
+and a MySQL 8.0 database together. Docker and Docker Compose must be installed.
+
+1. Copy the env template and edit it with your own values:
+
+   cp .env.example .env
+
+2. Start the whole stack:
+
+   docker compose up -x-build
+
+The API is available at `http://localhost:8080`. On first start, Flyway creates the
+schema inside the MySQL container.
+
+Note about existing databases: if you already have a database built by the old
+ddl-auto=update setup, it may still contain old columns such as branch_id and money
+stored as FLOAT. Drop that database and let Flyway rebuild it, otherwise the app
+will not start. New databases are created cleanly by Flyway.
 
 ### Test
 
