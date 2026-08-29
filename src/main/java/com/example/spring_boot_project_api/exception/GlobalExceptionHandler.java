@@ -1,4 +1,4 @@
-package com.example.spring_boot_project_api.controller;
+package com.example.spring_boot_project_api.exception;
 
 import java.util.HashMap;
 import java.util.Map;

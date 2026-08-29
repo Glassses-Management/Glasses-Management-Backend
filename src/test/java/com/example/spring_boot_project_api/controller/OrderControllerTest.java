@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.spring_boot_project_api.dto.request.OrderRequest;
 import com.example.spring_boot_project_api.dto.response.OrderResponse;
+import com.example.spring_boot_project_api.exception.GlobalExceptionHandler;
 import com.example.spring_boot_project_api.service.OrderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

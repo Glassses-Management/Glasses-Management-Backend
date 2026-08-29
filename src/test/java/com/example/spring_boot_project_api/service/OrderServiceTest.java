@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +34,13 @@ import com.example.spring_boot_project_api.repository.CustomerRepository;
 import com.example.spring_boot_project_api.repository.InventoryRepository;
 import com.example.spring_boot_project_api.repository.OrderRepository;
 import com.example.spring_boot_project_api.repository.ProductRepository;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -200,5 +208,87 @@ class OrderServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Invalid order status");
         verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void search_appliesFiltersAndReturnsPage() {
+        Page<Order> page = new PageImpl<>(List.of(new Order()));
+        when(orderRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+        when(orderMapper.toResponse(any(Order.class))).thenReturn(new OrderResponse());
+
+        Page<OrderResponse> result = orderService.search(null, "PENDING", null, null, Pageable.ofSize(10));
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(orderRepository).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    void search_throwsWhenDateFromAfterDateTo() {
+        LocalDate from = LocalDate.of(2025, 1, 10);
+        LocalDate to = LocalDate.of(2025, 1, 1);
+
+        assertThatThrownBy(() -> orderService.search(null, null, from, to, Pageable.ofSize(10)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("dateFrom must not be after dateTo");
+    }
+
+    @Test
+    void search_throwsOnInvalidSortProperty() {
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("unknownField"));
+
+        assertThatThrownBy(() -> orderService.search(null, null, null, null, pageable))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("not allowed");
+    }
+
+    @Test
+    void create_multiItemSumsTotalCorrectly() {
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(productRepository.findById(10L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProductId(10L)).thenReturn(Optional.of(inventory));
+        when(orderRepository.save(orderCaptor.capture())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderMapper.toResponse(any(Order.class))).thenReturn(new OrderResponse());
+
+        OrderRequest.ItemRequest i1 = new OrderRequest.ItemRequest();
+        i1.setProduct_id(10L);
+        i1.setQuantity(2);
+        i1.setLen_price(new BigDecimal("20.00"));
+        i1.setLen_type("Single Vision");
+        i1.setLen_coating("AR");
+
+        OrderRequest.ItemRequest i2 = new OrderRequest.ItemRequest();
+        i2.setProduct_id(10L);
+        i2.setQuantity(1);
+        i2.setLen_price(new BigDecimal("50.00"));
+        i2.setLen_type("Single Vision");
+        i2.setLen_coating("AR");
+
+        OrderRequest request = new OrderRequest();
+        request.setCustomer_id(1L);
+        request.setItems(List.of(i1, i2));
+
+        orderService.create(request);
+
+        // (100 + 20) * 2 + (100 + 50) * 1 = 240 + 150 = 390
+        assertThat(orderCaptor.getValue().getTotal()).isEqualByComparingTo("390.00");
+    }
+
+    @Test
+    void create_mapsLensFieldsOntoOrderItem() {
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(productRepository.findById(10L)).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProductId(10L)).thenReturn(Optional.of(inventory));
+        when(orderRepository.save(orderCaptor.capture())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderMapper.toResponse(any(Order.class))).thenReturn(new OrderResponse());
+
+        OrderRequest request = sampleRequest(1, new BigDecimal("20.00"));
+        request.getItems().get(0).setLen_index("1.67");
+
+        orderService.create(request);
+
+        OrderItem item = orderCaptor.getValue().getItems().get(0);
+        assertThat(item.getLen_type()).isEqualTo("Single Vision");
+        assertThat(item.getLen_coating()).isEqualTo("AR");
+        assertThat(item.getLen_index()).isEqualTo(1.67f);
     }
 }

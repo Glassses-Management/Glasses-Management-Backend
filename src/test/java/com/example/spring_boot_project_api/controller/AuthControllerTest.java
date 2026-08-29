@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.spring_boot_project_api.dto.request.LoginRequest;
+import com.example.spring_boot_project_api.exception.GlobalExceptionHandler;
 import com.example.spring_boot_project_api.dto.response.AuthResponse;
 import com.example.spring_boot_project_api.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;

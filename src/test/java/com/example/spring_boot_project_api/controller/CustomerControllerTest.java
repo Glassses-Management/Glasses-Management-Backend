@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.spring_boot_project_api.dto.request.CustomerRequest;
 import com.example.spring_boot_project_api.dto.response.CustomerResponse;
+import com.example.spring_boot_project_api.exception.GlobalExceptionHandler;
 import com.example.spring_boot_project_api.service.CustomerService;
 
 @ExtendWith(MockitoExtension.class)

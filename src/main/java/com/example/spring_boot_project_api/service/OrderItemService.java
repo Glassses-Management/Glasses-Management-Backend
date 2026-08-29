@@ -74,6 +74,15 @@ public class OrderItemService {
     @Transactional
     public OrderItemResponse update(Long id, OrderItemRequest request){
         OrderItem orderItem = getEntity(id);
+
+        if (orderItem.getProduct() != null) {
+            inventoryRepository.findByProductId(orderItem.getProduct().getId())
+                    .ifPresent(inv -> {
+                        inv.setQuantity(inv.getQuantity() + orderItem.getQuantity());
+                        inventoryRepository.save(inv);
+                    });
+        }
+
         OrderItem updated = buildOrderItem(request);
 
         orderItem.setOrder(updated.getOrder());
@@ -90,8 +99,19 @@ public class OrderItemService {
         return orderItemMapper.toResponse(orderItemRepository.save(orderItem));
     }
 
+    @Transactional
     public void delete(Long id){
-        orderItemRepository.delete(getEntity(id));
+        OrderItem orderItem = getEntity(id);
+
+        if (orderItem.getProduct() != null) {
+            inventoryRepository.findByProductId(orderItem.getProduct().getId())
+                    .ifPresent(inv -> {
+                        inv.setQuantity(inv.getQuantity() + orderItem.getQuantity());
+                        inventoryRepository.save(inv);
+                    });
+        }
+
+        orderItemRepository.delete(orderItem);
     }
 
     private OrderItem buildOrderItem(OrderItemRequest request){
