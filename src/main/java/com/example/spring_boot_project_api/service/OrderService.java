@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -30,6 +32,20 @@ import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class OrderService {
+
+    private static final Set<String> KNOWN_STATUSES = Set.of(
+            "PENDING", "CONFIRMED", "IN_PROGRESS", "READY_FOR_PICKUP", "COMPLETED", "CANCELLED");
+
+    private static final Map<String, Set<String>> ALLOWED_TRANSITIONS = new HashMap<>();
+
+    static {
+        ALLOWED_TRANSITIONS.put("PENDING", Set.of("CONFIRMED", "CANCELLED"));
+        ALLOWED_TRANSITIONS.put("CONFIRMED", Set.of("IN_PROGRESS", "CANCELLED"));
+        ALLOWED_TRANSITIONS.put("IN_PROGRESS", Set.of("READY_FOR_PICKUP", "CANCELLED"));
+        ALLOWED_TRANSITIONS.put("READY_FOR_PICKUP", Set.of("COMPLETED", "CANCELLED"));
+        ALLOWED_TRANSITIONS.put("COMPLETED", Set.of());
+        ALLOWED_TRANSITIONS.put("CANCELLED", Set.of());
+    }
 
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
@@ -180,6 +196,29 @@ public class OrderService {
         order.setCustomer(customer);
         order.setUpdated_at(LocalDateTime.now());
 
+        return orderMapper.toResponse(orderRepository.save(order));
+    }
+
+    @Transactional
+    public OrderResponse changeStatus(Long id, String newStatus) {
+        Order order = getEntity(id);
+
+        String target = newStatus == null ? null : newStatus.trim().toUpperCase();
+        if (!KNOWN_STATUSES.contains(target)) {
+            throw new IllegalArgumentException("Invalid order status: " + newStatus);
+        }
+
+        String current = order.getStatus() != null ? order.getStatus() : "PENDING";
+        if (current.equals(target)) {
+            return orderMapper.toResponse(order);
+        }
+        if (!ALLOWED_TRANSITIONS.getOrDefault(current, Set.of()).contains(target)) {
+            throw new IllegalArgumentException(
+                    "Cannot transition order from " + current + " to " + target);
+        }
+
+        order.setStatus(target);
+        order.setUpdated_at(LocalDateTime.now());
         return orderMapper.toResponse(orderRepository.save(order));
     }
 
