@@ -26,7 +26,12 @@ public class User {
     private Long id;
 
     private String name;
+
+    @Column(unique = true)
     private String email;
+
+    @Column(name = "phone", unique = true, length = 15)
+    private String phone;
 
     @Enumerated(EnumType.STRING)
     private Role role;

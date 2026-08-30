@@ -30,6 +30,9 @@ public class UserService {
 
     @Transactional
     public UserResponse create(UserRequest request){
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
         User user = userMapper.toEntity(request);
         user.setPassword_hash(passwordEncoder.encode(request.getPassword_hash()));
         user.setRole(parseRole(request.getRole()));
@@ -50,6 +53,10 @@ public class UserService {
     @Transactional
     public UserResponse update(Long id, UserRequest request){
         User user = getEntity(id);
+
+        if (userRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
 
         user.setName(request.getUserName());
         user.setEmail(request.getEmail());

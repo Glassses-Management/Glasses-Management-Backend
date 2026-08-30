@@ -8,14 +8,19 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.spring_boot_project_api.dto.request.CustomerRegisterRequest;
 import com.example.spring_boot_project_api.dto.request.CustomerRequest;
 import com.example.spring_boot_project_api.dto.response.CustomerResponse;
 import com.example.spring_boot_project_api.mapper.CustomerMapper;
 import com.example.spring_boot_project_api.model.Customer;
+import com.example.spring_boot_project_api.model.Role;
+import com.example.spring_boot_project_api.model.User;
 import com.example.spring_boot_project_api.repository.CustomerRepository;
+import com.example.spring_boot_project_api.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -24,10 +29,15 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public CustomerService(CustomerRepository customerRepository, CustomerMapper customerMapper) {
+    public CustomerService(CustomerRepository customerRepository, CustomerMapper customerMapper,
+                           UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -36,6 +46,35 @@ public class CustomerService {
         ensureEmailAvailable(request.getEmail(), null);
 
         Customer customer = customerMapper.toEntity(request);
+        return customerMapper.toCreatedAtResponse(customerRepository.save(customer));
+    }
+
+    @Transactional
+    public CustomerResponse registerCustomer(CustomerRegisterRequest request) {
+        ensurePhoneAvailable(request.getPhone(), null);
+        ensureEmailAvailable(request.getEmail(), null);
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
+        if (userRepository.existsByPhone(request.getPhone())) {
+            throw new IllegalArgumentException("Phone number is already registered");
+        }
+
+        User user = new User();
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setRole(Role.CUSTOMER);
+        user.setPassword_hash(passwordEncoder.encode(request.getPassword()));
+        User savedUser = userRepository.save(user);
+
+        Customer customer = new Customer();
+        customer.setName(request.getName());
+        customer.setPhone(request.getPhone());
+        customer.setEmail(request.getEmail());
+        customer.setAddress(request.getAddress());
+        customer.setDateOfBirth(request.getDate_of_birth());
+        customer.setUser(savedUser);
         return customerMapper.toCreatedAtResponse(customerRepository.save(customer));
     }
 
