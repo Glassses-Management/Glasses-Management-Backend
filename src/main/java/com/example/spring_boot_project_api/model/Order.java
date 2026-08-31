@@ -49,6 +49,12 @@ public class Order {
     @Column(length = 20)
     private String status;
 
+    @Column(name = "request_type", length = 20)
+    private String request_type;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
     @Column(name = "payment_method", length = 30)
     private String payment_method;
 

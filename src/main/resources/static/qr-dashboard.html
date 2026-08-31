@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optical Shop - Customer QR</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --success: #16a34a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
+    width: 100%;
+    max-width: 520px;
+    padding: 32px;
+    text-align: center;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 6px; }
+  .sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 20px; }
+  .qr-frame {
+    display: inline-block;
+    background: #fff;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  }
+  .qr-frame img { width: 300px; height: 300px; display: block; }
+  .hint { margin-top: 14px; font-size: 0.9rem; color: var(--muted); }
+  .url-box {
+    margin-top: 20px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    word-break: break-all;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: var(--success);
+  }
+  .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .actions { margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
+  button {
+    padding: 11px 22px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #fff;
+    background: var(--primary);
+  }
+  button.secondary { background: #e2e8f0; color: var(--text); }
+  button:hover { filter: brightness(0.95); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Scan to Get Started</h1>
+    <div class="sub">Customers can scan this QR with their phone to register or sign in.</div>
+
+    <div class="qr-frame">
+      <img id="qrImage" src="/api/qr/current" alt="Customer QR Code"
+           onerror="this.onerror=null; this.src='/api/qr/request?'+Date.now()">
+    </div>
+    <div class="hint">Point a phone camera at the QR code above.</div>
+
+    <div class="url-box" id="urlBox">Loading current URL...</div>
+
+    <div class="status"><span class="dot"></span><span id="statusText">Live &amp; up to date</span></div>
+
+    <div class="actions">
+      <button id="printBtn">Print QR</button>
+      <button class="secondary" id="downloadBtn">Download PNG</button>
+    </div>
+  </div>
+
+<script>
+(function () {
+  var POLL_MS = 5000;
+  // Backend origin: same host when served via Spring Boot / tunnel.
+  // When opened from VSCode Live Server (e.g. localhost:5500), fall back to localhost:8080.
+  var API_BASE =
+    (location.hostname === "127.0.0.1" || location.hostname === "localhost") &&
+    location.port && location.port !== "8080"
+      ? "http://localhost:8080"
+      : "";
+
+  function api(path) { return API_BASE + path; }
+
+  function load() {
+    fetch(api("/api/qr/tunnel-url"))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var qrUrl = data.qrUrl || "";
+        document.getElementById("urlBox").textContent = qrUrl;
+        document.getElementById("statusText").textContent = "Live & up to date (" + (data.source || "unknown") + ")";
+      })
+      .catch(function () {
+        document.getElementById("urlBox").textContent = "Tunnel URL not ready yet - retrying...";
+        document.getElementById("statusText").textContent = "Waiting for tunnel...";
+      });
+
+    var img = document.getElementById("qrImage");
+    img.src = api("/api/qr/current?") + Date.now();
+    img.onerror = function () { this.onerror = null; this.src = api("/api/qr/request?") + Date.now(); };
+  }
+
+  document.getElementById("printBtn").addEventListener("click", function () {
+    window.print();
+  });
+
+  document.getElementById("downloadBtn").addEventListener("click", function () {
+    var a = document.createElement("a");
+    a.href = api("/api/qr/current?") + Date.now();
+    a.download = "customer-qr.png";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+
+  load();
+  setInterval(load, POLL_MS);
+})();
+</script>
+</body>
+</html>

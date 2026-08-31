@@ -46,7 +46,26 @@ services:
       JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      APP_BASE_URL: ${APP_BASE_URL}
+      APP_TUNNEL_URL_FILE: /qr-data/tunnel-url.txt
+      APP_TUNNEL_QR_FILE: /qr-data/qr-code.png
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+    volumes:
+      - qr-data:/qr-data
+
+  qr-watcher:
+    build: ./scripts/qr-watcher
+    depends_on:
+      app:
+        condition: service_started
+    environment:
+      TUNNEL_HOST: "http://app:8080"
+      QR_OUTPUT_DIR: "/qr-data"
+      FORM_PATH: "/request-form"
+    volumes:
+      - qr-data:/qr-data
+    restart: unless-stopped
 
 volumes:
   mysql_data:
+  qr-data:

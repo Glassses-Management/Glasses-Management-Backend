@@ -1,5 +1,6 @@
 package com.example.spring_boot_project_api.service;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -8,14 +9,22 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.spring_boot_project_api.dto.request.CustomerRegisterRequest;
 import com.example.spring_boot_project_api.dto.request.CustomerRequest;
+import com.example.spring_boot_project_api.dto.response.AuthResponse;
 import com.example.spring_boot_project_api.dto.response.CustomerResponse;
 import com.example.spring_boot_project_api.mapper.CustomerMapper;
+import com.example.spring_boot_project_api.mapper.UserMapper;
 import com.example.spring_boot_project_api.model.Customer;
+import com.example.spring_boot_project_api.model.Role;
+import com.example.spring_boot_project_api.model.User;
 import com.example.spring_boot_project_api.repository.CustomerRepository;
+import com.example.spring_boot_project_api.repository.UserRepository;
+import com.example.spring_boot_project_api.security.JwtService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -24,10 +33,20 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public CustomerService(CustomerRepository customerRepository, CustomerMapper customerMapper) {
+    public CustomerService(CustomerRepository customerRepository, CustomerMapper customerMapper,
+                           UserRepository userRepository, UserMapper userMapper,
+                           PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @Transactional
@@ -37,6 +56,46 @@ public class CustomerService {
 
         Customer customer = customerMapper.toEntity(request);
         return customerMapper.toCreatedAtResponse(customerRepository.save(customer));
+    }
+
+    @Transactional
+    public AuthResponse registerCustomer(CustomerRegisterRequest request) {
+        ensurePhoneAvailable(request.getPhone(), null);
+        ensureEmailAvailable(request.getEmail(), null);
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
+        if (userRepository.existsByPhone(request.getPhone())) {
+            throw new IllegalArgumentException("Phone number is already registered");
+        }
+
+        User user = new User();
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setRole(Role.CUSTOMER);
+        user.setPassword_hash(passwordEncoder.encode(request.getPassword()));
+        User savedUser = userRepository.save(user);
+
+        Customer customer = new Customer();
+        customer.setName(request.getName());
+        customer.setPhone(request.getPhone());
+        customer.setEmail(request.getEmail());
+        customer.setAddress(request.getAddress());
+        customer.setDateOfBirth(request.getDate_of_birth());
+        customer.setUser(savedUser);
+        customerRepository.save(customer);
+
+        Instant issuedAt = Instant.now();
+        String token = jwtService.generateToken(savedUser);
+
+        AuthResponse response = new AuthResponse();
+        response.setAccess_token(token);
+        response.setToken_type("Bearer");
+        response.setExpires_at(jwtService.expiresAtFrom(issuedAt));
+        response.setUser(userMapper.toSummaryResponse(savedUser));
+
+        return response;
     }
 
     @Transactional(readOnly = true)

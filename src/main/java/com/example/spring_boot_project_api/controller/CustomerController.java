@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.spring_boot_project_api.dto.request.CustomerRegisterRequest;
 import com.example.spring_boot_project_api.dto.request.CustomerRequest;
+import com.example.spring_boot_project_api.dto.response.AuthResponse;
 import com.example.spring_boot_project_api.dto.response.CustomerResponse;
 import com.example.spring_boot_project_api.service.CustomerService;
 
@@ -40,8 +42,8 @@ public class CustomerController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<CustomerResponse> register(@Valid @RequestBody CustomerRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(customerService.create(request));
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody CustomerRegisterRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(customerService.registerCustomer(request));
     }
 
     @PostMapping("/bulk")

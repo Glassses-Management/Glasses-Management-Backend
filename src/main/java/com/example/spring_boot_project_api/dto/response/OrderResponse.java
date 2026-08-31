@@ -16,6 +16,8 @@ public class OrderResponse {
     private List<OrderItemResponse> items;
     private BigDecimal total;
     private String status;
+    private String request_type;
+    private String notes;
     private String payment_method;
     private String payment_status;
     private LocalDate order_date;

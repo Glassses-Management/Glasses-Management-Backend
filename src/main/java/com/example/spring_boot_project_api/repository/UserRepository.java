@@ -8,6 +8,8 @@ import com.example.spring_boot_project_api.model.User;
 
 public interface UserRepository extends JpaRepository<User, Long>{
     Optional<User> findByEmail(String email);
+    Optional<User> findByPhone(String phone);
     boolean existsByEmail(String email);
     boolean existsByEmailAndIdNot(String email, Long id);
+    boolean existsByPhone(String phone);
 }

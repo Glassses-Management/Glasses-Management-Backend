@@ -38,11 +38,12 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+        User user = userRepository.findByEmail(request.getIdentifier())
+                .or(() -> userRepository.findByPhone(request.getIdentifier()))
+                .orElseThrow(() -> new BadCredentialsException("Invalid email/phone or password"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword_hash())) {
-            throw new BadCredentialsException("Invalid email or password");
+            throw new BadCredentialsException("Invalid email/phone or password");
         }
 
         Instant issuedAt = Instant.now();
