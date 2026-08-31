@@ -50,6 +50,7 @@ services:
       APP_TUNNEL_URL_FILE: /qr-data/tunnel-url.txt
       APP_TUNNEL_QR_FILE: /qr-data/qr-code.png
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      TZ: Asia/Bangkok
     volumes:
       - qr-data:/qr-data
 
