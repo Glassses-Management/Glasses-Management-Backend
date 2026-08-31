@@ -22,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.example.spring_boot_project_api.dto.request.CustomerRequestRequest;
 import com.example.spring_boot_project_api.dto.request.OrderRequest;
 import com.example.spring_boot_project_api.dto.response.OrderResponse;
 import com.example.spring_boot_project_api.mapper.OrderMapper;
@@ -29,11 +30,15 @@ import com.example.spring_boot_project_api.model.Customer;
 import com.example.spring_boot_project_api.model.Inventory;
 import com.example.spring_boot_project_api.model.Order;
 import com.example.spring_boot_project_api.model.OrderItem;
+import com.example.spring_boot_project_api.model.Prescription;
 import com.example.spring_boot_project_api.model.Product;
+import com.example.spring_boot_project_api.model.User;
 import com.example.spring_boot_project_api.repository.CustomerRepository;
 import com.example.spring_boot_project_api.repository.InventoryRepository;
 import com.example.spring_boot_project_api.repository.OrderRepository;
+import com.example.spring_boot_project_api.repository.PrescriptionRepository;
 import com.example.spring_boot_project_api.repository.ProductRepository;
+import com.example.spring_boot_project_api.repository.UserRepository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -55,6 +60,10 @@ class OrderServiceTest {
     private ProductRepository productRepository;
     @Mock
     private InventoryRepository inventoryRepository;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private PrescriptionRepository prescriptionRepository;
     @Mock
     private OrderMapper orderMapper;
 
@@ -145,6 +154,88 @@ class OrderServiceTest {
         assertThatThrownBy(() -> orderService.create(sampleRequest(1, BigDecimal.ZERO)))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Customer not found");
+    }
+
+    @Test
+    void submitCustomerRequest_createsPendingReviewOrder() {
+        User user = new User();
+        user.setId(2L);
+        CustomerRequestRequest request = new CustomerRequestRequest();
+        request.setType("exam");
+        request.setNotes("Need new lenses");
+
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+        when(customerRepository.findByUserId(2L)).thenReturn(Optional.of(customer));
+        when(orderRepository.save(orderCaptor.capture())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderMapper.toResponse(any(Order.class))).thenReturn(new OrderResponse());
+
+        orderService.submitCustomerRequest(2L, request);
+
+        Order saved = orderCaptor.getValue();
+        assertThat(saved.getStatus()).isEqualTo("PENDING_REVIEW");
+        assertThat(saved.getRequest_type()).isEqualTo("exam");
+        assertThat(saved.getNotes()).isEqualTo("Need new lenses");
+        assertThat(saved.getCustomer()).isEqualTo(customer);
+        assertThat(saved.getUser()).isEqualTo(user);
+        assertThat(saved.getOrder_date()).isEqualTo(LocalDate.now());
+    }
+
+    @Test
+    void submitCustomerRequest_acceptsProductTypeWithOwnedPrescription() {
+        User user = new User();
+        user.setId(2L);
+        Prescription prescription = new Prescription();
+        prescription.setId(5L);
+        prescription.setCustomer(customer);
+        CustomerRequestRequest request = new CustomerRequestRequest();
+        request.setType("product");
+        request.setPrescriptionId(5L);
+
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+        when(customerRepository.findByUserId(2L)).thenReturn(Optional.of(customer));
+        when(prescriptionRepository.findById(5L)).thenReturn(Optional.of(prescription));
+        when(orderRepository.save(orderCaptor.capture())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderMapper.toResponse(any(Order.class))).thenReturn(new OrderResponse());
+
+        orderService.submitCustomerRequest(2L, request);
+
+        Order saved = orderCaptor.getValue();
+        assertThat(saved.getPrescription()).isEqualTo(prescription);
+        assertThat(saved.getRequest_type()).isEqualTo("product");
+    }
+
+    @Test
+    void submitCustomerRequest_rejectsUnsupportedType() {
+        when(userRepository.findById(2L)).thenReturn(Optional.of(new User()));
+        when(customerRepository.findByUserId(2L)).thenReturn(Optional.of(customer));
+        CustomerRequestRequest request = new CustomerRequestRequest();
+        request.setType("frame");
+
+        assertThatThrownBy(() -> orderService.submitCustomerRequest(2L, request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must be 'exam' or 'product'");
+    }
+
+    @Test
+    void submitCustomerRequest_rejectsPrescriptionNotOwnedByCustomer() {
+        User user = new User();
+        user.setId(2L);
+        Customer other = new Customer();
+        other.setId(99L);
+        Prescription prescription = new Prescription();
+        prescription.setId(5L);
+        prescription.setCustomer(other);
+        CustomerRequestRequest request = new CustomerRequestRequest();
+        request.setType("product");
+        request.setPrescriptionId(5L);
+
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+        when(customerRepository.findByUserId(2L)).thenReturn(Optional.of(customer));
+        when(prescriptionRepository.findById(5L)).thenReturn(Optional.of(prescription));
+
+        assertThatThrownBy(() -> orderService.submitCustomerRequest(2L, request))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Prescription not found");
     }
 
     @Test

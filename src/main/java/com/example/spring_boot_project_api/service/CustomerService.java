@@ -1,5 +1,6 @@
 package com.example.spring_boot_project_api.service;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -14,13 +15,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.spring_boot_project_api.dto.request.CustomerRegisterRequest;
 import com.example.spring_boot_project_api.dto.request.CustomerRequest;
+import com.example.spring_boot_project_api.dto.response.AuthResponse;
 import com.example.spring_boot_project_api.dto.response.CustomerResponse;
 import com.example.spring_boot_project_api.mapper.CustomerMapper;
+import com.example.spring_boot_project_api.mapper.UserMapper;
 import com.example.spring_boot_project_api.model.Customer;
 import com.example.spring_boot_project_api.model.Role;
 import com.example.spring_boot_project_api.model.User;
 import com.example.spring_boot_project_api.repository.CustomerRepository;
 import com.example.spring_boot_project_api.repository.UserRepository;
+import com.example.spring_boot_project_api.security.JwtService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -30,14 +34,19 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public CustomerService(CustomerRepository customerRepository, CustomerMapper customerMapper,
-                           UserRepository userRepository, PasswordEncoder passwordEncoder) {
+                           UserRepository userRepository, UserMapper userMapper,
+                           PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
         this.userRepository = userRepository;
+        this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @Transactional
@@ -50,7 +59,7 @@ public class CustomerService {
     }
 
     @Transactional
-    public CustomerResponse registerCustomer(CustomerRegisterRequest request) {
+    public AuthResponse registerCustomer(CustomerRegisterRequest request) {
         ensurePhoneAvailable(request.getPhone(), null);
         ensureEmailAvailable(request.getEmail(), null);
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -75,7 +84,18 @@ public class CustomerService {
         customer.setAddress(request.getAddress());
         customer.setDateOfBirth(request.getDate_of_birth());
         customer.setUser(savedUser);
-        return customerMapper.toCreatedAtResponse(customerRepository.save(customer));
+        customerRepository.save(customer);
+
+        Instant issuedAt = Instant.now();
+        String token = jwtService.generateToken(savedUser);
+
+        AuthResponse response = new AuthResponse();
+        response.setAccess_token(token);
+        response.setToken_type("Bearer");
+        response.setExpires_at(jwtService.expiresAtFrom(issuedAt));
+        response.setUser(userMapper.toSummaryResponse(savedUser));
+
+        return response;
     }
 
     @Transactional(readOnly = true)

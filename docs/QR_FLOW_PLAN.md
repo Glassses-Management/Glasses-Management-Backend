@@ -1,5 +1,5 @@
 Plan: Enable login/register to QR code to submit request flow
-Status: Planned (not started). Build later.
+Status: Done (implemented). Verified with ./mvnw compile -q and ./mvnw test.
 
 Context
 
@@ -51,6 +51,7 @@ Step 6. Verification
 - Call GET /api/qr/request and confirm it returns a scannable PNG.
 - Open /request-form, register or login, submit, and confirm POST /api/requests creates an Order with PENDING_REVIEW.
 
-Open questions / options (resolve when building)
-- Restrict /api/requests to hasRole CUSTOMER only, or allow any authenticated user.
-- Decide whether the request form needs product selection or is notes-only at submit time. QRscan.md mentions exam vs product request.
+Open questions / options (resolved during build)
+- /api/requests is restricted to hasRole CUSTOMER only (the QR flow is customer-facing).
+- The request form has type (exam/product) + notes + optional prescription ID; type is validated server-side to "exam" or "product".
+- request_type (VARCHAR 20) and notes (TEXT) were added to the orders table via Flyway V5 so the submitted request reaches the staff dashboard.

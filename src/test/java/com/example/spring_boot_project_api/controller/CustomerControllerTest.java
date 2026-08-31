@@ -16,8 +16,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.example.spring_boot_project_api.dto.request.CustomerRequest;
-import com.example.spring_boot_project_api.dto.response.CustomerResponse;
+import com.example.spring_boot_project_api.dto.request.CustomerRegisterRequest;
+import com.example.spring_boot_project_api.dto.response.AuthResponse;
 import com.example.spring_boot_project_api.exception.GlobalExceptionHandler;
 import com.example.spring_boot_project_api.service.CustomerService;
 
@@ -41,17 +41,19 @@ class CustomerControllerTest {
 
     @Test
     void register_returnsCreated() throws Exception {
-        CustomerResponse response = new CustomerResponse();
-        response.setId(1L);
-        when(customerService.create(any(CustomerRequest.class))).thenReturn(response);
+        AuthResponse response = new AuthResponse();
+        response.setAccess_token("jwt-token");
+        response.setToken_type("Bearer");
+        when(customerService.registerCustomer(any(CustomerRegisterRequest.class))).thenReturn(response);
 
         String body = """
-                {"name":"Jane","phone":"0912345678","email":"jane@example.com"}
+                {"name":"Jane","phone":"0912345678","email":"jane@example.com","password":"secret123"}
                 """;
 
         mockMvc.perform(post("/api/customers/register").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1));
+                .andExpect(jsonPath("$.access_token").value("jwt-token"))
+                .andExpect(jsonPath("$.token_type").value("Bearer"));
     }
 
     @Test
