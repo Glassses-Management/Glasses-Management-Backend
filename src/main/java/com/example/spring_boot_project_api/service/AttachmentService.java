@@ -1,13 +1,14 @@
 package com.example.spring_boot_project_api.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.spring_boot_project_api.dto.request.AttachmentRequest;
 import com.example.spring_boot_project_api.dto.response.AttachmentResponse;
@@ -22,10 +23,13 @@ public class AttachmentService {
 
     private final AttachmentRepository attachmentRepository;
     private final AttachmentMapper attachmentMapper;
+    private final CloudinaryStorageService cloudinaryStorageService;
 
-    public AttachmentService(AttachmentRepository attachmentRepository, AttachmentMapper attachmentMapper) {
+    public AttachmentService(AttachmentRepository attachmentRepository, AttachmentMapper attachmentMapper,
+            CloudinaryStorageService cloudinaryStorageService) {
         this.attachmentRepository = attachmentRepository;
         this.attachmentMapper = attachmentMapper;
+        this.cloudinaryStorageService = cloudinaryStorageService;
     }
 
     @Transactional
@@ -80,6 +84,23 @@ public class AttachmentService {
         attachment.setFileSize(request.getFileSize());
 
         return attachmentMapper.toUpdatedAtResponse(attachmentRepository.save(attachment));
+    }
+
+    @Transactional
+    public AttachmentResponse upload(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File is required and must not be empty");
+        }
+
+        String filePath = cloudinaryStorageService.upload(file);
+
+        Attachment attachment = new Attachment();
+        attachment.setFileName(file.getOriginalFilename());
+        attachment.setFileType(file.getContentType());
+        attachment.setFilePath(filePath);
+        attachment.setFileSize(file.getSize());
+
+        return attachmentMapper.toCreatedAtResponse(attachmentRepository.save(attachment));
     }
 
     @Transactional
