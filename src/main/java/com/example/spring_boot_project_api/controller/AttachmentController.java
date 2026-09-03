@@ -48,8 +48,20 @@ public class AttachmentController {
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<AttachmentResponse> upload(@RequestParam("file") MultipartFile file) throws IOException {
-        return ResponseEntity.status(HttpStatus.CREATED).body(attachmentService.upload(file));
+    public ResponseEntity<AttachmentResponse> upload(@RequestParam("file") MultipartFile file,
+                                                     @RequestParam(required = false) Long userId,
+                                                     @RequestParam(required = false) Long productId) throws IOException {
+        return ResponseEntity.status(HttpStatus.CREATED).body(attachmentService.upload(file, userId, productId));
+    }
+
+    @GetMapping("/by-user/{userId}")
+    public List<AttachmentResponse> getByUserId(@PathVariable Long userId) {
+        return attachmentService.getByUserId(userId);
+    }
+
+    @GetMapping("/by-product/{productId}")
+    public List<AttachmentResponse> getByProductId(@PathVariable Long productId) {
+        return attachmentService.getByProductId(productId);
     }
 
     @GetMapping
@@ -70,7 +82,7 @@ public class AttachmentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) throws IOException {
         attachmentService.delete(id);
         return ResponseEntity.noContent().build();
     }

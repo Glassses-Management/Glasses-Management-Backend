@@ -51,6 +51,10 @@ services:
       APP_TUNNEL_QR_FILE: /qr-data/qr-code.png
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       TZ: Asia/Bangkok
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      CLOUDINARY_UPLOAD_FOLDER: ${CLOUDINARY_UPLOAD_FOLDER}
     volumes:
       - qr-data:/qr-data
 

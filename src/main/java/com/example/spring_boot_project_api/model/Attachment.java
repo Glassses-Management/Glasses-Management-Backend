@@ -11,6 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -46,6 +48,13 @@ public class Attachment {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "attachment")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<UserAttachment> userAttachments;
+
+    @OneToMany(mappedBy = "attachment")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<ProductAttachment> productAttachments;
 
 }
