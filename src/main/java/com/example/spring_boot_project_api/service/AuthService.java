@@ -1,7 +1,5 @@
 package com.example.spring_boot_project_api.service;
 
-import java.time.Instant;
-
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.spring_boot_project_api.dto.request.LoginRequest;
-import com.example.spring_boot_project_api.dto.response.AuthResponse;
 import com.example.spring_boot_project_api.dto.response.UserResponse;
 import com.example.spring_boot_project_api.mapper.UserMapper;
 import com.example.spring_boot_project_api.model.User;
@@ -37,7 +34,7 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public AuthResponse login(LoginRequest request) {
+    public String login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getIdentifier())
                 .or(() -> userRepository.findByPhone(request.getIdentifier()))
                 .orElseThrow(() -> new BadCredentialsException("Invalid email/phone or password"));
@@ -46,16 +43,7 @@ public class AuthService {
             throw new BadCredentialsException("Invalid email/phone or password");
         }
 
-        Instant issuedAt = Instant.now();
-        String token = jwtService.generateToken(user);
-
-        AuthResponse response = new AuthResponse();
-        response.setAccess_token(token);
-        response.setToken_type("Bearer");
-        response.setExpires_at(jwtService.expiresAtFrom(issuedAt));
-        response.setUser(userMapper.toSummaryResponse(user));
-
-        return response;
+        return jwtService.generateToken(user);
     }
 
     @Transactional(readOnly = true)
