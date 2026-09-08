@@ -2,7 +2,9 @@ package com.example.spring_boot_project_api.dto.request;
 
 import java.time.LocalDate;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -15,10 +17,12 @@ public class CustomerRegisterRequest {
 
     @NotBlank(message = "Phone number is required")
     @Size(max = 15, message = "Phone number must be under 15 character")
+    @Pattern(regexp = "^[0-9+\\-\\s()]{7,15}$", message = "Invalid phone number")
     private String phone;
 
     @NotBlank(message = "Email is required")
     @Size(max = 100, message = "Email must be under 100 character")
+    @Email(message = "Invalid email")
     private String email;
 
     private String address;

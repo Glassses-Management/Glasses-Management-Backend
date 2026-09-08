@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import com.example.spring_boot_project_api.dto.request.InventoryRequest;
 import com.example.spring_boot_project_api.dto.response.InventoryResponse;
 import com.example.spring_boot_project_api.model.Inventory;
+import com.example.spring_boot_project_api.model.Product;
 
 @Component
 public class InventoryMapper {
@@ -28,6 +29,18 @@ public class InventoryMapper {
         response.setLast_restocked_at(inventory.getLast_restocked_at());
         response.setCreated_at(inventory.getCreatedAt());
         response.setUpdated_at(inventory.getUpdatedAt());
+
+        if (inventory.getProduct() != null) {
+            Product product = inventory.getProduct();
+            response.setSku(product.getSku());
+            response.setModel(product.getModel());
+            response.setBrand(product.getBrand());
+            response.setCategory(product.getCategory());
+            response.setColor(product.getColor());
+            response.setSize(product.getSize());
+            response.setCost_price(product.getCost_price());
+            response.setSale_price(product.getSale_price());
+        }
         return response;
     }
 

@@ -13,6 +13,7 @@ import lombok.Data;
 public class OrderResponse {
     private Long id;
     private Long customer_id;
+    private String customer_name;
     private List<OrderItemResponse> items;
     private BigDecimal total;
     private String status;

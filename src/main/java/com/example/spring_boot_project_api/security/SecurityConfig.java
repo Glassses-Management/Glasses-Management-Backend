@@ -78,6 +78,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/qr/**",
                         "/request-form", "/request-form/", "/request-form.html", "/request-form/**",
                         "/qr-dashboard", "/qr-dashboard/", "/qr-dashboard.html", "/qr-dashboard/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/products",
+                        "/api/products/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/attachments/by-product/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/requests").hasRole("CUSTOMER")
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth -> oauth

@@ -63,10 +63,10 @@ public class CustomerService {
         ensurePhoneAvailable(request.getPhone(), null);
         ensureEmailAvailable(request.getEmail(), null);
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email is already registered");
+            throw new IllegalArgumentException("Email is already in use");
         }
         if (userRepository.existsByPhone(request.getPhone())) {
-            throw new IllegalArgumentException("Phone number is already registered");
+            throw new IllegalArgumentException("Phone number is already in use");
         }
 
         User user = new User();
