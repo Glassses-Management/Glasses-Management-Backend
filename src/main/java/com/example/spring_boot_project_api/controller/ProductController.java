@@ -65,7 +65,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) throws java.io.IOException {
         productService.delete(id);
         return ResponseEntity.noContent().build();
     }
