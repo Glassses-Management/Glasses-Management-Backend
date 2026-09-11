@@ -37,39 +37,50 @@ public class ProductSeeder implements ApplicationRunner {
         this.productAttachmentRepository = productAttachmentRepository;
     }
 
-    private static final List<String> IMAGE_URLS = List.of(
-            "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1577803645773-f96470509666?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1512149177596-f817c7ef5d4c?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1622630998477-20aa696ecb05?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1572020232333-6dad5947f634?auto=format&fit=crop&w=600&q=80");
+     private static final List<String> IMAGE_URLS = List.of(
+             "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=600&q=80",
+             "https://images.unsplash.com/photo-1577803645773-f96470509666?auto=format&fit=crop&w=600&q=80",
+             "https://images.unsplash.com/photo-1577400983943-874919eca6ce?auto=format&fit=crop&w=600&q=80",
+             "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?auto=format&fit=crop&w=600&q=80",
+             "https://images.unsplash.com/photo-1711564354066-2a6ec5fe5b66?auto=format&fit=crop&w=600&q=80",
+             "https://images.unsplash.com/photo-1701252374731-191f1b10a18b?auto=format&fit=crop&w=600&q=80",
+             "https://images.unsplash.com/photo-1701447428494-af7a13fc62e7?auto=format&fit=crop&w=600&q=80",
+             "https://images.unsplash.com/photo-1559668364-b609c3b5d6f5?auto=format&fit=crop&w=600&q=80",
+             "https://images.unsplash.com/photo-1648364210384-1d843fe77c29?auto=format&fit=crop&w=600&q=80",
+             "https://images.unsplash.com/photo-1612458385022-67e811703251?auto=format&fit=crop&w=600&q=80");
 
-    @Override
-    @Transactional
-    public void run(ApplicationArguments args) {
-        List<ProductRequest> samples = buildSamples();
+     @Override
+     @Transactional
+     public void run(ApplicationArguments args) {
+         List<ProductRequest> samples = buildSamples();
 
-        if (productRepository.count() == 0) {
-            for (ProductRequest request : samples) {
-                productRepository.save(productMapper.toEntity(request));
-            }
-            log.info("Seeded {} sample products", samples.size());
-        }
+         if (productRepository.count() == 0) {
+             for (ProductRequest request : samples) {
+                 productRepository.save(productMapper.toEntity(request));
+             }
+             log.info("Seeded {} sample products", samples.size());
+         }
 
-        for (int i = 0; i < samples.size(); i++) {
-            ProductRequest request = samples.get(i);
-            String imageUrl = IMAGE_URLS.get(i % IMAGE_URLS.size());
-            productRepository.findBySku(request.getSku()).ifPresent(product -> {
-                if (productAttachmentRepository.findByProductId(product.getId()).isEmpty()) {
-                    attachImage(product, imageUrl);
-                }
-            });
-        }
-    }
+         for (int i = 0; i < samples.size(); i++) {
+             ProductRequest request = samples.get(i);
+             String imageUrl = IMAGE_URLS.get(i % IMAGE_URLS.size());
+             productRepository.findBySku(request.getSku()).ifPresent(product -> {
+                 removeExistingAttachments(product);
+                 attachImage(product, imageUrl);
+             });
+         }
+     }
 
-    private void attachImage(Product product, String imageUrl) {
+     private void removeExistingAttachments(Product product) {
+         List<ProductAttachment> existingLinks = productAttachmentRepository.findByProductId(product.getId());
+         for (ProductAttachment link : existingLinks) {
+             Attachment attachment = link.getAttachment();
+             productAttachmentRepository.delete(link);
+             attachmentRepository.delete(attachment);
+         }
+     }
+
+     private void attachImage(Product product, String imageUrl) {
         Attachment attachment = new Attachment();
         attachment.setFileName(product.getSku() + "-image.jpg");
         attachment.setFileType("image/jpeg");

@@ -18,4 +18,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     boolean existsByOptometristIdAndScheduledAt(Long optometristId, LocalDateTime scheduledAt);
 
     boolean existsByOptometristIdAndScheduledAtAndIdNot(Long optometristId, LocalDateTime scheduledAt, Long id);
+
+    boolean existsByCustomerIdAndCreatedAtBetween(Long customerId, LocalDateTime start, LocalDateTime end);
 }

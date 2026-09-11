@@ -15,6 +15,8 @@ public class OrderRequest {
     @NotNull(message = "Customer id is required")
     private Long customer_id;
 
+    private Long prescription_id;
+
     @NotEmpty(message = "Order must have at least one item")
     @Size(min = 1, message = "Order must have at least one item")
     private List<ItemRequest> items;

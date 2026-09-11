@@ -113,6 +113,10 @@ public class AttachmentService {
             throw new IllegalArgumentException("File is required and must not be empty");
         }
 
+        if (!file.getContentType().startsWith("image/")) {
+            throw new IllegalArgumentException("Only image files are allowed (received: " + file.getContentType() + ")");
+        }
+
         User user = userId != null ? getUser(userId) : null;
         Product product = productId != null ? getProduct(productId) : null;
 

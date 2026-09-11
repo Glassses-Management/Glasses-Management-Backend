@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.spring_boot_project_api.dto.request.CustomerRequestRequest;
-import com.example.spring_boot_project_api.dto.response.OrderResponse;
 import com.example.spring_boot_project_api.service.OrderService;
 
 import jakarta.validation.Valid;
@@ -26,14 +25,14 @@ public class RequestController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderResponse> submit(@AuthenticationPrincipal Jwt jwt,
+    public ResponseEntity<Object> submit(@AuthenticationPrincipal Jwt jwt,
                                                 @Valid @RequestBody CustomerRequestRequest request) {
         Object uidClaim = jwt.getClaim("uid");
         if (!(uidClaim instanceof Number)) {
             throw new IllegalArgumentException("Invalid token: missing user id");
         }
         Long uid = ((Number) uidClaim).longValue();
-        OrderResponse order = orderService.submitCustomerRequest(uid, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(order);
+        Object result = orderService.submitCustomerRequest(uid, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 }

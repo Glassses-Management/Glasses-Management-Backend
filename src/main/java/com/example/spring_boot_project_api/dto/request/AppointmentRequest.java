@@ -16,7 +16,6 @@ public class AppointmentRequest {
 
     private Long optometrist_id;
 
-    @NotNull(message = "Scheduled time is required")
     private LocalDateTime scheduled_at;
 
     @NotBlank(message = "Status is require")

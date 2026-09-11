@@ -15,8 +15,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.spring_boot_project_api.dto.request.AppointmentRequest;
 import com.example.spring_boot_project_api.dto.request.CustomerRequestRequest;
 import com.example.spring_boot_project_api.dto.request.OrderRequest;
+import com.example.spring_boot_project_api.dto.response.AppointmentResponse;
 import com.example.spring_boot_project_api.dto.response.OrderResponse;
 import com.example.spring_boot_project_api.mapper.OrderMapper;
 import com.example.spring_boot_project_api.model.Customer;
@@ -26,12 +28,14 @@ import com.example.spring_boot_project_api.model.OrderItem;
 import com.example.spring_boot_project_api.model.Prescription;
 import com.example.spring_boot_project_api.model.Product;
 import com.example.spring_boot_project_api.model.User;
+import com.example.spring_boot_project_api.repository.AppointmentRepository;
 import com.example.spring_boot_project_api.repository.CustomerRepository;
 import com.example.spring_boot_project_api.repository.InventoryRepository;
 import com.example.spring_boot_project_api.repository.OrderRepository;
 import com.example.spring_boot_project_api.repository.PrescriptionRepository;
 import com.example.spring_boot_project_api.repository.ProductRepository;
 import com.example.spring_boot_project_api.repository.UserRepository;
+import com.example.spring_boot_project_api.service.AppointmentService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -53,12 +57,14 @@ public class OrderService {
     }
 
     private final OrderRepository orderRepository;
+    private final AppointmentRepository appointmentRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
     private final UserRepository userRepository;
     private final PrescriptionRepository prescriptionRepository;
     private final OrderMapper orderMapper;
+    private final AppointmentService appointmentService;
 
     public OrderService(OrderRepository orderRepository,
                         CustomerRepository customerRepository,
@@ -66,7 +72,9 @@ public class OrderService {
                         InventoryRepository inventoryRepository,
                         UserRepository userRepository,
                         PrescriptionRepository prescriptionRepository,
-                        OrderMapper orderMapper) {
+                        OrderMapper orderMapper,
+                        AppointmentService appointmentService,
+                        AppointmentRepository appointmentRepository) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.productRepository = productRepository;
@@ -74,6 +82,8 @@ public class OrderService {
         this.userRepository = userRepository;
         this.prescriptionRepository = prescriptionRepository;
         this.orderMapper = orderMapper;
+        this.appointmentService = appointmentService;
+        this.appointmentRepository = appointmentRepository;
     }
 
     @Transactional
@@ -85,8 +95,18 @@ public class OrderService {
             throw new IllegalArgumentException("Order must have at least one item");
         }
 
+        Prescription prescription = null;
+        if (request.getPrescription_id() != null) {
+            prescription = prescriptionRepository.findById(request.getPrescription_id())
+                    .filter(p -> p.getCustomer() != null
+                            && p.getCustomer().getId().equals(customer.getId()))
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Prescription not found for id: " + request.getPrescription_id()));
+        }
+
         Order order = new Order();
         order.setCustomer(customer);
+        order.setPrescription(prescription);
         order.setStatus("PENDING");
         order.setOrder_date(LocalDate.now());
         order.setCreated_at(LocalDateTime.now());
@@ -150,7 +170,7 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse submitCustomerRequest(Long uid, CustomerRequestRequest request) {
+    public Object submitCustomerRequest(Long uid, CustomerRequestRequest request) {
         User user = userRepository.findById(uid)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
@@ -162,26 +182,32 @@ public class OrderService {
             throw new IllegalArgumentException("Request type must be 'exam' or 'product'");
         }
 
-        Prescription prescription = null;
-        if (request.getPrescriptionId() != null) {
-            prescription = prescriptionRepository.findById(request.getPrescriptionId())
-                    .filter(p -> p.getCustomer() != null
-                            && p.getCustomer().getId().equals(customer.getId()))
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Prescription not found for id: " + request.getPrescriptionId()));
+        if ("exam".equals(type)) {
+            return createExamAppointment(customer, request.getNotes());
         }
 
-        Order order = new Order();
-        order.setCustomer(customer);
-        order.setUser(user);
-        order.setPrescription(prescription);
-        order.setStatus("PENDING_REVIEW");
-        order.setRequest_type(type);
-        order.setNotes(request.getNotes());
-        order.setOrder_date(LocalDate.now());
-        order.setCreated_at(LocalDateTime.now());
+        throw new IllegalArgumentException("Use /api/orders to create a product order with prescription_id");
+    }
 
-        return orderMapper.toResponse(orderRepository.save(order));
+    @Transactional
+    public AppointmentResponse createExamAppointment(Customer customer, String notes) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime dayStart = today.atStartOfDay();
+        LocalDateTime dayEnd = today.plusDays(1).atStartOfDay();
+
+        if (appointmentRepository.existsByCustomerIdAndCreatedAtBetween(customer.getId(), dayStart, dayEnd)) {
+            throw new IllegalArgumentException(
+                    "You already submitted an exam request today. Please try again tomorrow.");
+        }
+
+        AppointmentRequest req = new AppointmentRequest();
+        req.setCustomer_id(customer.getId());
+        req.setOptometrist_id(null);
+        req.setScheduled_at(null);
+        req.setStatus("PENDING_REVIEW");
+        req.setNotes(notes);
+
+        return appointmentService.create(req);
     }
 
     @Transactional(readOnly = true)

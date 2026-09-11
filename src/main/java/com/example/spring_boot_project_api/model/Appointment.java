@@ -32,7 +32,7 @@ public class Appointment {
     @JoinColumn(name = "optometrist_id")
     private User optometrist;
 
-    @Column(name = "scheduled_at", nullable = false)
+    @Column(name = "scheduled_at")
     private LocalDateTime scheduledAt;
 
     @Column(nullable = false, length = 20)

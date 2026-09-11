@@ -13,6 +13,4 @@ public class CustomerRequestRequest {
 
     @Size(max = 1000, message = "Notes must be under 1000 characters")
     private String notes;
-
-    private Long prescriptionId;
 }
