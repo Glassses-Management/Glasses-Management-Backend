@@ -1,6 +1,7 @@
 package com.example.spring_boot_project_api.security;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,17 +13,23 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 public class CorsFilter extends OncePerRequestFilter {
 
-    // private static final String[] ALLOWED_ORIGINS = {
-    //     "http://localhost:*",
-    //     "https://*.trycloudflare.com",
-    //     "https://glasses-management-frontend-i4wa-mu.vercel.app"
-    // };
-
     private static final String[] ALLOWED_ORIGINS = {
         "http://localhost:*",
         "https://*.trycloudflare.com",
         "https://*.vercel.app"
     };
+
+    private static final Pattern[] ALLOWED_PATTERNS;
+
+    static {
+        ALLOWED_PATTERNS = new Pattern[ALLOWED_ORIGINS.length];
+        for (int i = 0; i < ALLOWED_ORIGINS.length; i++) {
+            String pattern = ALLOWED_ORIGINS[i]
+                .replace(".", "\\.")
+                .replace("*", ".*");
+            ALLOWED_PATTERNS[i] = Pattern.compile(pattern);
+        }
+    }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -33,11 +40,12 @@ public class CorsFilter extends OncePerRequestFilter {
         if (origin != null && !origin.isEmpty()) {
             if (isAllowedOrigin(origin)) {
                 response.setHeader("Access-Control-Allow-Origin", origin);
+                response.setHeader("Vary", "Origin");
+                response.setHeader("Access-Control-Allow-Credentials", "true");
             }
         }
-        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With, Accept, Origin");
-        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept, Origin, X-Requested-With");
         response.setHeader("Access-Control-Max-Age", "3600");
 
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
@@ -48,11 +56,8 @@ public class CorsFilter extends OncePerRequestFilter {
     }
 
     private boolean isAllowedOrigin(String origin) {
-        for (String allowed : ALLOWED_ORIGINS) {
-            if (allowed.endsWith(":*")) {
-                String prefix = allowed.substring(0, allowed.length() - 2);
-                if (origin.startsWith(prefix)) return true;
-            } else if (origin.equals(allowed)) {
+        for (Pattern pattern : ALLOWED_PATTERNS) {
+            if (pattern.matcher(origin).matches()) {
                 return true;
             }
         }
