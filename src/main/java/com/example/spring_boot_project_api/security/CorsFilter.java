@@ -12,6 +12,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 public class CorsFilter extends OncePerRequestFilter {
 
+    private static final String[] ALLOWED_ORIGINS = {
+        "http://localhost:*",
+        "https://*.trycloudflare.com",
+        "https://glasses-management-frontend-i4wa-mu.vercel.app"
+    };
+
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
@@ -19,11 +25,12 @@ public class CorsFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String origin = request.getHeader("Origin");
         if (origin != null && !origin.isEmpty()) {
-            response.setHeader("Access-Control-Allow-Origin", origin);
+            if (isAllowedOrigin(origin)) {
+                response.setHeader("Access-Control-Allow-Origin", origin);
+            }
         }
-        response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS");
-        response.setHeader("Access-Control-Allow-Private-Network", "true");
-        response.setHeader("Access-Control-Allow-Headers", "*");
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With, Accept, Origin");
         response.setHeader("Access-Control-Allow-Credentials", "true");
         response.setHeader("Access-Control-Max-Age", "3600");
 
@@ -32,5 +39,17 @@ public class CorsFilter extends OncePerRequestFilter {
         } else {
             filterChain.doFilter(request, response);
         }
+    }
+
+    private boolean isAllowedOrigin(String origin) {
+        for (String allowed : ALLOWED_ORIGINS) {
+            if (allowed.endsWith(":*")) {
+                String prefix = allowed.substring(0, allowed.length() - 2);
+                if (origin.startsWith(prefix)) return true;
+            } else if (origin.equals(allowed)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
