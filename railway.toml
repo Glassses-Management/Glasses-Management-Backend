@@ -6,9 +6,3 @@
   port = 8080
   restart_policy_type = "on-failure"
   restart_policy_maximum_retries = 3
-
-[environment]
-  ADMIN_EMAIL = "admin@example.com"
-  ADMIN_PASSWORD = "27012007"
-  JWT_SECRET = "bXktc3VwZXItc2VjcmV0LWtleS1mb3Itd2RqLXRva2VuLTIwMjY="
-  APP_BASE_URL = "https://diplomatic-emotion-production-7e03.up.railway.app"
