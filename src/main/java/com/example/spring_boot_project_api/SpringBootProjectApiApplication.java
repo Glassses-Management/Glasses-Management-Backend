@@ -11,3 +11,13 @@ public class SpringBootProjectApiApplication {
 	}
 
 }
+
+// @SpringBootApplication
+// public class YourApplication {
+//     public static void main(String[] args) {
+//         SpringApplication app = new SpringApplication(YourApplication.class);
+//         var context = app.run(args);
+//         System.out.println("DB_HOST = " + context.getEnvironment().getProperty("DB_HOST"));
+//         System.out.println("DB_NAME = " + context.getEnvironment().getProperty("DB_NAME"));
+//     }
+// }

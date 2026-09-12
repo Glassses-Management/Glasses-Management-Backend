@@ -1,0 +1,12 @@
+CREATE TABLE product_attachment (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    product_id    BIGINT NOT NULL,
+    attachment_id BIGINT NOT NULL,
+    created_at    DATETIME,
+    CONSTRAINT uk_product_attachment UNIQUE (product_id, attachment_id),
+    CONSTRAINT fk_product_attachment_product FOREIGN KEY (product_id) REFERENCES product (id),
+    CONSTRAINT fk_product_attachment_attachment FOREIGN KEY (attachment_id) REFERENCES attachment (id)
+);
+
+ALTER TABLE user_attachment
+    ADD CONSTRAINT uk_user_attachment UNIQUE (user_id, attachment_id);

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optical Shop - Glasses Request</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --success: #16a34a;
+    --error: #dc2626;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    width: 100%;
+    max-width: 420px;
+    padding: 32px;
+  }
+  h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+  label { display: block; font-size: 0.85rem; font-weight: 600; margin: 12px 0 6px; }
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: #fff;
+  }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
+  textarea { resize: vertical; min-height: 80px; }
+  button {
+    width: 100%;
+    margin-top: 18px;
+    padding: 12px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: var(--primary-dark); }
+  button.secondary { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+  button.secondary:hover { background: #eff6ff; }
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0;
+  }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .msg { display: none; padding: 12px; border-radius: 8px; font-size: 0.9rem; margin-top: 16px; }
+  .msg.error { display: block; background: #fef2f2; color: var(--error); border: 1px solid #fecaca; }
+  .msg.success { display: block; background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+  .meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .badge { font-size: 0.8rem; color: var(--muted); }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <!-- Authenticated: request form -->
+    <section id="userView" class="hidden">
+      <div class="meta">
+        <div>
+          <h1>Glasses Request</h1>
+          <div class="badge" id="userGreeting"></div>
+        </div>
+        <button id="logoutBtn" class="secondary" style="width:auto; margin:0; padding:8px 14px;">Sign out</button>
+      </div>
+
+      <form id="requestForm">
+        <label for="type">Request type</label>
+        <select id="type" required>
+          <option value="">Select type...</option>
+          <option value="exam">Exam request</option>
+          <option value="product">Product request</option>
+        </select>
+
+        <label for="notes">Notes</label>
+        <textarea id="notes" placeholder="Tell us what you need... (e.g. frame model, lens preference)"></textarea>
+
+        <button type="submit">Submit request</button>
+        <div id="requestMsg" class="msg"></div>
+      </form>
+    </section>
+
+    <!-- Unauthenticated: login / register -->
+    <section id="authView">
+      <h1>Welcome</h1>
+      <div class="sub">Sign in or create an account to submit your glasses request.</div>
+
+      <div class="tabs">
+        <button type="button" class="tab active" id="tabLogin">Login</button>
+        <button type="button" class="tab" id="tabRegister">Register</button>
+      </div>
+
+      <form id="loginForm">
+        <label for="identifier">Email or phone</label>
+        <input id="identifier" placeholder="you@example.com" required>
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" required>
+        <button type="submit">Sign in</button>
+      </form>
+
+      <form id="registerForm" class="hidden">
+        <label for="regName">Full name</label>
+        <input id="regName" maxlength="20" required>
+        <label for="regPhone">Phone</label>
+        <input id="regPhone" maxlength="15" required>
+        <label for="regEmail">Email</label>
+        <input type="email" id="regEmail" maxlength="100" required>
+        <label for="regAddress">Address (optional)</label>
+        <input id="regAddress" maxlength="100">
+        <label for="regDob">Date of birth (optional)</label>
+        <input type="date" id="regDob">
+        <label for="regPassword">Password</label>
+        <input type="password" id="regPassword" minlength="6" maxlength="100" required>
+        <button type="submit">Create account</button>
+      </form>
+
+      <div id="authMsg" class="msg"></div>
+    </section>
+  </div>
+
+<script>
+(function () {
+  var TOKEN_KEY = "glasses_access_token";
+  var USER_KEY = "glasses_user";
+
+  function show(el) { el.classList.remove("hidden"); }
+  function hide(el) { el.classList.add("hidden"); }
+  function message(id, text, type) {
+    var el = document.getElementById(id);
+    el.textContent = text || "";
+    el.className = "msg" + (type ? " " + type : "");
+  }
+
+  function storeSession(resp) {
+    localStorage.setItem(TOKEN_KEY, resp.access_token);
+    localStorage.setItem(USER_KEY, JSON.stringify(resp.user || {}));
+  }
+
+  function currentToken() { return localStorage.getItem(TOKEN_KEY); }
+
+  function render() {
+    var token = currentToken();
+    var authView = document.getElementById("authView");
+    var userView = document.getElementById("userView");
+    if (token) {
+      var user = {};
+      try { user = JSON.parse(localStorage.getItem(USER_KEY)) || {}; } catch (e) {}
+      document.getElementById("userGreeting").textContent = "Signed in as " + (user.name || user.email || "");
+      hide(authView);
+      show(userView);
+    } else {
+      hide(userView);
+      show(authView);
+    }
+  }
+
+  async function postForm(url, data) {
+    var res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    var body = await res.json().catch(function () { return {}; });
+    if (!res.ok) {
+      var detail = typeof body === "object" ? Object.values(body).join(" ") : (body.message || "");
+      throw new Error(detail || ("Request failed with status " + res.status));
+    }
+    return body;
+  }
+
+  document.getElementById("tabLogin").addEventListener("click", function () {
+    document.getElementById("tabLogin").classList.add("active");
+    document.getElementById("tabRegister").classList.remove("active");
+    hide(document.getElementById("registerForm"));
+    show(document.getElementById("loginForm"));
+  });
+  document.getElementById("tabRegister").addEventListener("click", function () {
+    document.getElementById("tabRegister").classList.add("active");
+    document.getElementById("tabLogin").classList.remove("active");
+    hide(document.getElementById("loginForm"));
+    show(document.getElementById("registerForm"));
+  });
+
+  document.getElementById("loginForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    message("authMsg", "", "");
+    try {
+      var resp = await postForm("/api/auth/login", {
+        identifier: document.getElementById("identifier").value.trim(),
+        password: document.getElementById("loginPassword").value
+      });
+      storeSession(resp);
+      render();
+    } catch (err) {
+      message("authMsg", err.message, "error");
+    }
+  });
+
+  document.getElementById("registerForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    message("authMsg", "", "");
+    var dob = document.getElementById("regDob").value;
+    try {
+      var resp = await postForm("/api/customers/register", {
+        name: document.getElementById("regName").value.trim(),
+        phone: document.getElementById("regPhone").value.trim(),
+        email: document.getElementById("regEmail").value.trim(),
+        address: document.getElementById("regAddress").value.trim(),
+        date_of_birth: dob || null,
+        password: document.getElementById("regPassword").value
+      });
+      storeSession(resp);
+      render();
+    } catch (err) {
+      message("authMsg", err.message, "error");
+    }
+  });
+
+  document.getElementById("requestForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    message("requestMsg", "", "");
+    try {
+      var resp = await fetch("/api/requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + currentToken()
+        },
+        body: JSON.stringify({
+          type: document.getElementById("type").value,
+          notes: document.getElementById("notes").value.trim()
+        })
+      });
+      var body = await resp.json().catch(function () { return {}; });
+      if (!resp.ok) {
+        var detail = typeof body === "object" ? Object.values(body).join(" ") : (body.message || "");
+        throw new Error(detail || ("Request failed with status " + resp.status));
+      }
+      document.getElementById("requestForm").reset();
+      message("requestMsg", "Your request was submitted. Reference #" + body.id +
+        " (status: " + body.status + "). Our staff will review it shortly.", "success");
+    } catch (err) {
+      message("requestMsg", err.message, "error");
+    }
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", function () {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
