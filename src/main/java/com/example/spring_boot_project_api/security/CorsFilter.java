@@ -12,10 +12,16 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 public class CorsFilter extends OncePerRequestFilter {
 
+    // private static final String[] ALLOWED_ORIGINS = {
+    //     "http://localhost:*",
+    //     "https://*.trycloudflare.com",
+    //     "https://glasses-management-frontend-i4wa-mu.vercel.app"
+    // };
+
     private static final String[] ALLOWED_ORIGINS = {
         "http://localhost:*",
         "https://*.trycloudflare.com",
-        "https://glasses-management-frontend-i4wa-mu.vercel.app"
+        "https://*.vercel.app"
     };
 
     @Override
