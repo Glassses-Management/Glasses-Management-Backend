@@ -1,0 +1,8 @@
+[build]
+  context = "."
+  dockerfile = "Dockerfile"
+
+[deploy]
+  port = 8080
+  restart_policy_type = "on-failure"
+  restart_policy_maximum_retries = 3
