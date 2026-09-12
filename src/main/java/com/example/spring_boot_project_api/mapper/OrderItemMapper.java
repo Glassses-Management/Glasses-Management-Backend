@@ -44,8 +44,8 @@ public class OrderItemMapper {
         response.setUnit_price(orderItem.getUnit_price());
         response.setTotal_price(orderItem.getTotal_price());
 
-        response.setCreated_at(orderItem.getCreated_at());
-        response.setUpdated_at(orderItem.getUpdated_at());
+        response.setCreatedAt(orderItem.getCreatedAt());
+        response.setUpdatedAt(orderItem.getUpdatedAt());
 
         return response;
     }

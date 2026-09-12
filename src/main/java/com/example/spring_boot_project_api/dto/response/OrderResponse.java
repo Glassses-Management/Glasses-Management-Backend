@@ -22,8 +22,8 @@ public class OrderResponse {
     private String payment_method;
     private String payment_status;
     private LocalDate order_date;
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
 }

@@ -44,7 +44,7 @@ public class OrderItemService {
     @Transactional
     public OrderItemResponse create(OrderItemRequest request){
         OrderItem orderItem = buildOrderItem(request);
-        orderItem.setCreated_at(LocalDateTime.now());
+        orderItem.setCreatedAt(LocalDateTime.now());
 
         return orderItemMapper.toResponse(orderItemRepository.save(orderItem));
     }
@@ -94,7 +94,7 @@ public class OrderItemService {
         orderItem.setLen_price(updated.getLen_price());
         orderItem.setUnit_price(updated.getUnit_price());
         orderItem.setTotal_price(updated.getTotal_price());
-        orderItem.setUpdated_at(LocalDateTime.now());
+        orderItem.setUpdatedAt(LocalDateTime.now());
 
         return orderItemMapper.toResponse(orderItemRepository.save(orderItem));
     }

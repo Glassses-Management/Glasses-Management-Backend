@@ -47,7 +47,7 @@ public class PrescriptionService {
 
         Prescription saved = prescriptionRepository.save(prescription);
         PrescriptionResponse response = prescriptionMapper.toResponse(saved);
-        response.setUpdated_at(null);
+        response.setUpdatedAt(null);
 
         return response;
     }
@@ -99,7 +99,7 @@ public class PrescriptionService {
 
         Prescription saved = prescriptionRepository.saveAndFlush(prescription);
         PrescriptionResponse response = prescriptionMapper.toResponse(saved);
-        response.setCreated_at(null);
+        response.setCreatedAt(null);
 
         return response;
     }

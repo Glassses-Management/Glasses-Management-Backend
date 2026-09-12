@@ -23,8 +23,8 @@ public class OrderItemResponse {
     private BigDecimal unit_price;
     private BigDecimal total_price;
 
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
 }

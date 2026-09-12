@@ -50,8 +50,8 @@ public class PrescriptionMapper {
         response.setNotes(prescription.getNotes());
 
         response.setPrescription_date(prescription.getPrescription_date());
-        response.setCreated_at(prescription.getCreated_at());
-        response.setUpdated_at(prescription.getUpdated_at());
+        response.setCreatedAt(prescription.getCreatedAt());
+        response.setUpdatedAt(prescription.getUpdatedAt());
 
         return response;
     }

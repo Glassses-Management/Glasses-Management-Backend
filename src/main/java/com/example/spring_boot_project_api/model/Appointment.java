@@ -43,6 +43,6 @@ public class Appointment {
 
     @Column(name = "created_at")
     @CreationTimestamp
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
 }

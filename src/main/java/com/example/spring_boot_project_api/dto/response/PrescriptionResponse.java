@@ -29,8 +29,8 @@ public class PrescriptionResponse {
     private LocalDate prescription_date;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
 }

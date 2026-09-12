@@ -34,8 +34,8 @@ public class OrderMapper {
         response.setPayment_method(order.getPayment_method());
         response.setPayment_status(order.getPayment_status());
         response.setOrder_date(order.getOrder_date());
-        response.setCreated_at(order.getCreated_at());
-        response.setUpdated_at(order.getUpdated_at());
+        response.setCreatedAt(order.getCreatedAt());
+        response.setUpdatedAt(order.getUpdatedAt());
 
         if (order.getItems() != null) {
             response.setItems(order.getItems().stream()

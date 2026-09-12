@@ -109,7 +109,7 @@ public class OrderService {
         order.setPrescription(prescription);
         order.setStatus("PENDING");
         order.setOrder_date(LocalDate.now());
-        order.setCreated_at(LocalDateTime.now());
+        order.setCreatedAt(LocalDateTime.now());
 
         List<OrderItem> orderItems = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
@@ -154,7 +154,7 @@ public class OrderService {
                 orderItem.setLen_index(Float.parseFloat(itemRequest.getLen_index()));
             }
             orderItem.setTotal_price(subtotal);
-            orderItem.setCreated_at(LocalDateTime.now());
+            orderItem.setCreatedAt(LocalDateTime.now());
 
             orderItems.add(orderItem);
 
@@ -226,7 +226,7 @@ public class OrderService {
     public Page<OrderResponse> search(Long customerId, String status,
                                       LocalDate dateFrom, LocalDate dateTo,
                                       Pageable pageable) {
-        assertSortAllowed(pageable, Set.of("id", "order_date", "status", "created_at", "updated_at"));
+        assertSortAllowed(pageable, Set.of("id", "order_date", "status", "createdAt", "updatedAt"));
 
         if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
             throw new IllegalArgumentException("dateFrom must not be after dateTo");
@@ -266,7 +266,7 @@ public class OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
 
         order.setCustomer(customer);
-        order.setUpdated_at(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
 
         return orderMapper.toResponse(orderRepository.save(order));
     }
@@ -290,7 +290,7 @@ public class OrderService {
         }
 
         order.setStatus(target);
-        order.setUpdated_at(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
         return orderMapper.toResponse(orderRepository.save(order));
     }
 
