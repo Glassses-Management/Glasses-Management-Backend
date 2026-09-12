@@ -40,7 +40,8 @@ public class AdminUserSeeder implements ApplicationRunner {
             return;
         }
 
-        if (userRepository.count() > 0) {
+        if (userRepository.findByEmail(adminEmail).isPresent()) {
+            log.info("Admin user already exists, skipping seeding");
             return;
         }
 
