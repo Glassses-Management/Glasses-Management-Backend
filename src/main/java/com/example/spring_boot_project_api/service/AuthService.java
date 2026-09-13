@@ -1,11 +1,15 @@
 package com.example.spring_boot_project_api.service;
 
+import java.util.Map;
+
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.spring_boot_project_api.dto.request.ChangeMyPasswordRequest;
 import com.example.spring_boot_project_api.dto.request.LoginRequest;
 import com.example.spring_boot_project_api.dto.response.UserResponse;
 import com.example.spring_boot_project_api.mapper.UserMapper;
@@ -52,5 +56,28 @@ public class AuthService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         return userMapper.toResponse(user);
+    }
+
+    @Transactional
+    public Map<String, String> changePassword(Authentication authentication, ChangeMyPasswordRequest request) {
+        User user = userRepository.findById(userIdFromToken(authentication))
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword_hash())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        user.setPassword_hash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return Map.of("message", "Password changed successfully");
+    }
+
+    private Long userIdFromToken(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof Jwt jwt
+                && jwt.getClaim("uid") instanceof Number uid) {
+            return uid.longValue();
+        }
+        throw new EntityNotFoundException("User not found");
     }
 }
