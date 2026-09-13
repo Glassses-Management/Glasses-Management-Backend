@@ -1,0 +1,28 @@
+package com.example.spring_boot_project_api.dto.request;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+
+@Data
+public class UserUpdateRequest {
+
+    @NotBlank(message = "User name is required")
+    @Size(max = 20, message = "User name must be under 20 character")
+    private String userName;
+
+    @Size(max = 15, message = "Phone number must be under 15 character")
+    @Pattern(regexp = "^[0-9+\\-\\s()]{7,15}$", message = "Invalid phone number")
+    private String phone;
+
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be a valid email address")
+    @Size(max = 100, message = "Email must be under 100 character")
+    private String email;
+
+    @NotBlank(message = "Role is required")
+    private String role;
+
+}

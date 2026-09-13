@@ -13,6 +13,10 @@ public class UserRequest {
     @Size(max = 20, message = "User name must be under 20 character")
     private String userName;
 
+    @Size(max = 15, message = "Phone number must be under 15 character")
+    @Pattern(regexp = "^[0-9+\\-\\s()]{7,15}$", message = "Invalid phone number")
+    private String phone;
+
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be a valid email address")
     @Size(max = 100, message = "Email must be under 100 character")

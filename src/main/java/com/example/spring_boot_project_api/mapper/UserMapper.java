@@ -14,6 +14,7 @@ public class UserMapper {
 
         user.setName(dto.getUserName());
         user.setEmail(dto.getEmail());
+        user.setPhone(dto.getPhone());
         user.setPassword_hash(dto.getPassword_hash());
 
         return user;
@@ -25,6 +26,7 @@ public class UserMapper {
         response.setId(user.getId());
         response.setName(user.getName());
         response.setEmail(user.getEmail());
+        response.setPhone(user.getPhone());
         response.setRole(user.getRole() != null ? user.getRole().name() : null);
         response.setCreated_at(user.getCreatedAt());
         response.setUpdated_at(user.getUpdatedAt());
@@ -38,6 +40,7 @@ public class UserMapper {
         response.setId(user.getId());
         response.setName(user.getName());
         response.setEmail(user.getEmail());
+        response.setPhone(user.getPhone());
         response.setRole(user.getRole() != null ? user.getRole().name() : null);
 
         return response;

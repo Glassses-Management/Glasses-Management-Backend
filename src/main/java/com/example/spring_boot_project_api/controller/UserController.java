@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.spring_boot_project_api.dto.request.ChangePasswordRequest;
 import com.example.spring_boot_project_api.dto.request.UserRequest;
+import com.example.spring_boot_project_api.dto.request.UserUpdateRequest;
 import com.example.spring_boot_project_api.dto.response.UserResponse;
 import com.example.spring_boot_project_api.service.UserService;
 
@@ -56,8 +58,14 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public UserResponse update(@PathVariable Long id, @Valid @RequestBody UserRequest request){
+    public UserResponse update(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest request){
         return userService.update(id, request);
+    }
+
+    @PutMapping("/{id}/password")
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserResponse changePassword(@PathVariable Long id, @Valid @RequestBody ChangePasswordRequest request){
+        return userService.changePassword(id, request.getNewPassword());
     }
 
     @DeleteMapping("/{id}")

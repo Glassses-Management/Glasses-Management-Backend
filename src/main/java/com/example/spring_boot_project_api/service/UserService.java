@@ -3,6 +3,7 @@ package com.example.spring_boot_project_api.service;
 import java.util.List;
 
 import com.example.spring_boot_project_api.dto.request.UserRequest;
+import com.example.spring_boot_project_api.dto.request.UserUpdateRequest;
 import com.example.spring_boot_project_api.dto.response.UserResponse;
 import com.example.spring_boot_project_api.mapper.UserMapper;
 import com.example.spring_boot_project_api.model.User;
@@ -33,6 +34,10 @@ public class UserService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email is already registered");
         }
+        if (request.getPhone() != null && !request.getPhone().isBlank()
+                && userRepository.existsByPhone(request.getPhone())) {
+            throw new IllegalArgumentException("Phone number is already registered");
+        }
         User user = userMapper.toEntity(request);
         user.setPassword_hash(passwordEncoder.encode(request.getPassword_hash()));
         user.setRole(parseRole(request.getRole()));
@@ -51,18 +56,32 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse update(Long id, UserRequest request){
+    public UserResponse update(Long id, UserUpdateRequest request){
         User user = getEntity(id);
 
         if (userRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
             throw new IllegalArgumentException("Email is already registered");
         }
+        if (request.getPhone() != null && !request.getPhone().isBlank()
+                && userRepository.existsByPhone(request.getPhone())
+                && !request.getPhone().equals(user.getPhone())) {
+            throw new IllegalArgumentException("Phone number is already registered");
+        }
 
         user.setName(request.getUserName());
         user.setEmail(request.getEmail());
-        user.setPassword_hash(passwordEncoder.encode(request.getPassword_hash()));
+        if (request.getPhone() != null && !request.getPhone().isBlank()) {
+            user.setPhone(request.getPhone());
+        }
         user.setRole(parseRole(request.getRole()));
 
+        return userMapper.toUpdatedAtResponse(userRepository.save(user));
+    }
+
+    @Transactional
+    public UserResponse changePassword(Long id, String newPassword){
+        User user = getEntity(id);
+        user.setPassword_hash(passwordEncoder.encode(newPassword));
         return userMapper.toUpdatedAtResponse(userRepository.save(user));
     }
 
