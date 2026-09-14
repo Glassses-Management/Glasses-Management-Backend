@@ -73,7 +73,7 @@ class RequestControllerTest {
         RequestResponse response = new RequestResponse();
         response.setId(1L);
         response.setStatus("PENDING");
-        when(requestService.submit(any(Long.class), any(RequestRequest.class))).thenReturn(response);
+        when(requestService.submit(any(Long.class), any(String.class), any(RequestRequest.class))).thenReturn(response);
 
         String body = """
                 {"type":"exam","notes":"Need eye checkup"}

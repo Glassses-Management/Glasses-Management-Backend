@@ -60,9 +60,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/products",
                         "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/attachments/by-product/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/requests").hasRole("CUSTOMER")
-                .requestMatchers(HttpMethod.POST, "/api/requests/{id}/approve").hasRole("STAFF")
-                .requestMatchers(HttpMethod.POST, "/api/requests/{id}/reject").hasRole("STAFF")
+                .requestMatchers(HttpMethod.POST, "/api/requests").hasAnyRole("CUSTOMER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/requests/{id}/approve").hasAnyRole("STAFF", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/requests/{id}/reject").hasAnyRole("STAFF", "ADMIN")
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth -> oauth
                 .jwt(jwt -> jwt.jwtAuthenticationConverter(roleClaimConverter()))

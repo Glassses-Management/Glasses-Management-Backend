@@ -665,32 +665,53 @@ scheduled_at, status, notes, created_at.
 Base path: /api/requests
 
 Method / URL / Auth / Description
-POST / /api/requests / ROLE_CUSTOMER / Submit an exam or product request
+POST /api/requests / ROLE_CUSTOMER or ROLE_ADMIN / Submit an exam or product request
+POST /api/requests/{id}/approve / ROLE_STAFF or ROLE_ADMIN / Approve a PENDING request
+POST /api/requests/{id}/reject / ROLE_STAFF or ROLE_ADMIN / Reject a PENDING request
+GET /api/requests / ROLE_* (any authenticated user) / List all requests
+GET /api/requests/{id} / ROLE_* / Get request by id
+GET /api/requests/customer/{customerId} / ROLE_* / Get requests by customer
+GET /api/requests/status/{status} / ROLE_* / Get requests by status
+DELETE /api/requests/{id} / ROLE_* / Delete a request
 
-This is how a logged-in customer requests an eye exam or a product purchase. The
-customer's uid is read from the JWT (must be present, or 400
-"Invalid token: missing user id"). The customer must already have a linked
-Customer profile (else 404 "Customer profile not found").
+For a customer, the uid is read from the JWT and the customer's linked
+Customer profile is used (else 404 "Customer profile not found"). Staff and
+admin may pass an explicit customerId to submit on behalf of a customer.
 
-Request body (CustomerRequestRequest):
+Request body (RequestRequest):
 
 {
   "type": "exam",
-  "notes": "Need new reading glasses",
-  "prescriptionId": 12
+  "notes": "I would like to have my vision checked."
 }
 
 - type (string, required): exam or product (case-insensitive). Anything else
   -> 400 "Request type must be 'exam' or 'product'".
 - notes (string, optional, max 1000).
-- prescriptionId (Long, optional): if provided, the prescription must exist
-  and belong to the requesting customer (else 404).
+- customerId (Long, optional): only accepted from ROLE_STAFF / ROLE_ADMIN;
+  resolves the request to the given customer. Customers cannot pass it
+  (403 "Only staff or admin can submit a request on behalf of a customer").
 
-Behavior: creates an Order with status = "PENDING_REVIEW", the customer
-linked, the user (requesting customer's user account) linked, the optional
-prescription linked, request_type set, notes set, and order_date = today.
+Business flow: Request -> Appointment -> Eye Exam -> Prescription.
 
-Response 201 is an OrderResponse (see Section 10.1).
+A request is created with status = "PENDING". Submitting a request NEVER
+creates or requires a Prescription, and never creates an Appointment.
+
+Approving:
+
+- type = "exam": status becomes APPROVED and an Appointment is auto-created
+  with status "PENDING_SCHEDULING", request_id = request.id, scheduled_at =
+  null, optometrist = null. The Appointment is created BEFORE any prescription
+  exists.
+- type = "product": status becomes APPROVED only. No Appointment is created;
+  product purchases continue to flow through the Order workflow.
+
+Rejecting a PENDING request sets status = "REJECTED". No Appointment and no
+Prescription are created.
+
+Response 201 is a RequestResponse: id, customer_id, customer_name, type,
+status, notes, created_at, updated_at (updated_at is only present after the
+request has been modified).
 
 ---
 

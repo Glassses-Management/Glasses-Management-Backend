@@ -11,14 +11,14 @@ import com.example.spring_boot_project_api.dto.response.RequestResponse;
 import com.example.spring_boot_project_api.mapper.RequestMapper;
 import com.example.spring_boot_project_api.model.Appointment;
 import com.example.spring_boot_project_api.model.Customer;
-import com.example.spring_boot_project_api.model.Prescription;
 import com.example.spring_boot_project_api.model.Request;
 import com.example.spring_boot_project_api.repository.AppointmentRepository;
 import com.example.spring_boot_project_api.repository.CustomerRepository;
-import com.example.spring_boot_project_api.repository.PrescriptionRepository;
 import com.example.spring_boot_project_api.repository.RequestRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+
+import org.springframework.security.access.AccessDeniedException;
 
 @Service
 public class RequestService {
@@ -27,46 +27,49 @@ public class RequestService {
     private static final String STATUS_APPROVED = "APPROVED";
     private static final String STATUS_REJECTED = "REJECTED";
 
+    private static final String TYPE_EXAM = "exam";
+    private static final String TYPE_PRODUCT = "product";
+
+    private static final String APPOINTMENT_STATUS_PENDING_SCHEDULING = "PENDING_SCHEDULING";
+
     private final RequestRepository requestRepository;
     private final CustomerRepository customerRepository;
-    private final PrescriptionRepository prescriptionRepository;
     private final AppointmentRepository appointmentRepository;
     private final RequestMapper requestMapper;
 
     public RequestService(RequestRepository requestRepository,
                           CustomerRepository customerRepository,
-                          PrescriptionRepository prescriptionRepository,
                           AppointmentRepository appointmentRepository,
                           RequestMapper requestMapper) {
         this.requestRepository = requestRepository;
         this.customerRepository = customerRepository;
-        this.prescriptionRepository = prescriptionRepository;
         this.appointmentRepository = appointmentRepository;
         this.requestMapper = requestMapper;
     }
 
     @Transactional
-    public RequestResponse submit(Long userId, RequestRequest request) {
-        Customer customer = customerRepository.findByUserId(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Customer profile not found"));
-
-        String type = request.getType() == null ? null : request.getType().trim().toLowerCase();
-        if (type == null || !("exam".equals(type) || "product".equals(type))) {
-            throw new IllegalArgumentException("Request type must be 'exam' or 'product'");
+    public RequestResponse submit(Long userId, String role, RequestRequest request) {
+        Customer customer;
+        if (request.getCustomerId() != null) {
+            if (!("ADMIN".equalsIgnoreCase(role) || "STAFF".equalsIgnoreCase(role))) {
+                throw new AccessDeniedException(
+                        "Only staff or admin can submit a request on behalf of a customer");
+            }
+            customer = customerRepository.findById(request.getCustomerId())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Customer not found for id: " + request.getCustomerId()));
+        } else {
+            customer = customerRepository.findByUserId(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("Customer profile not found"));
         }
 
-        Prescription prescription = null;
-        if (request.getPrescriptionId() != null) {
-            prescription = prescriptionRepository.findById(request.getPrescriptionId())
-                    .filter(p -> p.getCustomer() != null
-                            && p.getCustomer().getId().equals(customer.getId()))
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Prescription not found for id: " + request.getPrescriptionId()));
+        String type = request.getType() == null ? null : request.getType().trim().toLowerCase();
+        if (type == null || !(TYPE_EXAM.equals(type) || TYPE_PRODUCT.equals(type))) {
+            throw new IllegalArgumentException("Request type must be 'exam' or 'product'");
         }
 
         Request entity = requestMapper.toEntity(request);
         entity.setCustomer(customer);
-        entity.setPrescription(prescription);
         entity.setStatus(STATUS_PENDING);
 
         Request saved = requestRepository.save(entity);
@@ -81,25 +84,28 @@ public class RequestService {
             throw new IllegalStateException("Only PENDING requests can be approved");
         }
 
-        if (appointmentRepository.existsByRequestId(requestId)) {
+        if (TYPE_EXAM.equalsIgnoreCase(request.getType())
+                && appointmentRepository.existsByRequestId(requestId)) {
             throw new IllegalStateException("An appointment already exists for this request");
         }
 
         request.setStatus(STATUS_APPROVED);
-        Request approved = requestRepository.save(request);
+        request.setUpdatedAt(LocalDateTime.now());
+        requestRepository.save(request);
 
-        Appointment appointment = new Appointment();
-        appointment.setCustomer(approved.getCustomer());
-        appointment.setStatus("PENDING_REVIEW");
-        appointment.setNotes(approved.getNotes());
-        appointment.setRequest(approved);
-        appointment.setScheduledAt(null);
-        appointment.setOptometrist(null);
-        appointment.setCreatedAt(LocalDateTime.now());
+        if (TYPE_EXAM.equalsIgnoreCase(request.getType())) {
+            Appointment appointment = new Appointment();
+            appointment.setCustomer(request.getCustomer());
+            appointment.setStatus(APPOINTMENT_STATUS_PENDING_SCHEDULING);
+            appointment.setNotes(request.getNotes());
+            appointment.setRequest(request);
+            appointment.setScheduledAt(null);
+            appointment.setOptometrist(null);
 
-        appointmentRepository.save(appointment);
+            appointmentRepository.save(appointment);
+        }
 
-        return requestMapper.toResponse(approved);
+        return requestMapper.toResponse(request);
     }
 
     @Transactional
@@ -111,8 +117,9 @@ public class RequestService {
         }
 
         request.setStatus(STATUS_REJECTED);
-        Request rejected = requestRepository.save(request);
-        return requestMapper.toResponse(rejected);
+        request.setUpdatedAt(LocalDateTime.now());
+        requestRepository.save(request);
+        return requestMapper.toResponse(request);
     }
 
     @Transactional(readOnly = true)

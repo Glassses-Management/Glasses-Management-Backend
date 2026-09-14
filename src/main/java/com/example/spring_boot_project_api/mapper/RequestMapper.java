@@ -27,7 +27,6 @@ public class RequestMapper {
         response.setType(request.getType());
         response.setStatus(request.getStatus());
         response.setNotes(request.getNotes());
-        response.setPrescription_id(request.getPrescription() != null ? request.getPrescription().getId() : null);
         response.setCreatedAt(request.getCreatedAt());
         response.setUpdatedAt(request.getUpdatedAt());
         return response;

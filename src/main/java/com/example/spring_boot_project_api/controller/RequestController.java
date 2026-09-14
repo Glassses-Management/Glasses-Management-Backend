@@ -39,7 +39,8 @@ public class RequestController {
             throw new IllegalArgumentException("Invalid token: missing user id");
         }
         Long uid = ((Number) uidClaim).longValue();
-        return ResponseEntity.status(HttpStatus.CREATED).body(requestService.submit(uid, request));
+        String role = jwt.getClaimAsString("role");
+        return ResponseEntity.status(HttpStatus.CREATED).body(requestService.submit(uid, role, request));
     }
 
     @PostMapping("/{id}/approve")

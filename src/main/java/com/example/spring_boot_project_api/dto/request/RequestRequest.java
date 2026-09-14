@@ -11,7 +11,7 @@ public class RequestRequest {
     @Size(max = 20, message = "Request type must be under 20 characters")
     private String type;
 
-    private Long prescriptionId;
+    private Long customerId;
 
     @Size(max = 1000, message = "Notes must be under 1000 characters")
     private String notes;
