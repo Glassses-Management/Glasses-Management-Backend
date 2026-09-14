@@ -61,6 +61,8 @@ public class SecurityConfig {
                         "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/attachments/by-product/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/requests").hasRole("CUSTOMER")
+                .requestMatchers(HttpMethod.POST, "/api/requests/{id}/approve").hasRole("STAFF")
+                .requestMatchers(HttpMethod.POST, "/api/requests/{id}/reject").hasRole("STAFF")
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth -> oauth
                 .jwt(jwt -> jwt.jwtAuthenticationConverter(roleClaimConverter()))

@@ -32,6 +32,10 @@ public class Appointment {
     @JoinColumn(name = "optometrist_id")
     private User optometrist;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "request_id")
+    private Request request;
+
     @Column(name = "scheduled_at")
     private LocalDateTime scheduledAt;
 

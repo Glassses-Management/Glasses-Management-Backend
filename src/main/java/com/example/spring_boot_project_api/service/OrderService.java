@@ -15,10 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.spring_boot_project_api.dto.request.AppointmentRequest;
-import com.example.spring_boot_project_api.dto.request.CustomerRequestRequest;
 import com.example.spring_boot_project_api.dto.request.OrderRequest;
-import com.example.spring_boot_project_api.dto.response.AppointmentResponse;
 import com.example.spring_boot_project_api.dto.response.OrderResponse;
 import com.example.spring_boot_project_api.mapper.OrderMapper;
 import com.example.spring_boot_project_api.model.Customer;
@@ -27,15 +24,11 @@ import com.example.spring_boot_project_api.model.Order;
 import com.example.spring_boot_project_api.model.OrderItem;
 import com.example.spring_boot_project_api.model.Prescription;
 import com.example.spring_boot_project_api.model.Product;
-import com.example.spring_boot_project_api.model.User;
-import com.example.spring_boot_project_api.repository.AppointmentRepository;
 import com.example.spring_boot_project_api.repository.CustomerRepository;
 import com.example.spring_boot_project_api.repository.InventoryRepository;
 import com.example.spring_boot_project_api.repository.OrderRepository;
 import com.example.spring_boot_project_api.repository.PrescriptionRepository;
 import com.example.spring_boot_project_api.repository.ProductRepository;
-import com.example.spring_boot_project_api.repository.UserRepository;
-import com.example.spring_boot_project_api.service.AppointmentService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -57,33 +50,24 @@ public class OrderService {
     }
 
     private final OrderRepository orderRepository;
-    private final AppointmentRepository appointmentRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
-    private final UserRepository userRepository;
     private final PrescriptionRepository prescriptionRepository;
     private final OrderMapper orderMapper;
-    private final AppointmentService appointmentService;
 
     public OrderService(OrderRepository orderRepository,
                         CustomerRepository customerRepository,
                         ProductRepository productRepository,
                         InventoryRepository inventoryRepository,
-                        UserRepository userRepository,
                         PrescriptionRepository prescriptionRepository,
-                        OrderMapper orderMapper,
-                        AppointmentService appointmentService,
-                        AppointmentRepository appointmentRepository) {
+                        OrderMapper orderMapper) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
-        this.userRepository = userRepository;
         this.prescriptionRepository = prescriptionRepository;
         this.orderMapper = orderMapper;
-        this.appointmentService = appointmentService;
-        this.appointmentRepository = appointmentRepository;
     }
 
     @Transactional
@@ -167,47 +151,6 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
 
         return orderMapper.toResponse(savedOrder);
-    }
-
-    @Transactional
-    public Object submitCustomerRequest(Long uid, CustomerRequestRequest request) {
-        User user = userRepository.findById(uid)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-        Customer customer = customerRepository.findByUserId(uid)
-                .orElseThrow(() -> new EntityNotFoundException("Customer profile not found"));
-
-        String type = request.getType() == null ? null : request.getType().trim().toLowerCase();
-        if (type == null || !("exam".equals(type) || "product".equals(type))) {
-            throw new IllegalArgumentException("Request type must be 'exam' or 'product'");
-        }
-
-        if ("exam".equals(type)) {
-            return createExamAppointment(customer, request.getNotes());
-        }
-
-        throw new IllegalArgumentException("Use /api/orders to create a product order with prescription_id");
-    }
-
-    @Transactional
-    public AppointmentResponse createExamAppointment(Customer customer, String notes) {
-        LocalDate today = LocalDate.now();
-        LocalDateTime dayStart = today.atStartOfDay();
-        LocalDateTime dayEnd = today.plusDays(1).atStartOfDay();
-
-        if (appointmentRepository.existsByCustomerIdAndCreatedAtBetween(customer.getId(), dayStart, dayEnd)) {
-            throw new IllegalArgumentException(
-                    "You already submitted an exam request today. Please try again tomorrow.");
-        }
-
-        AppointmentRequest req = new AppointmentRequest();
-        req.setCustomer_id(customer.getId());
-        req.setOptometrist_id(null);
-        req.setScheduled_at(null);
-        req.setStatus("PENDING_REVIEW");
-        req.setNotes(notes);
-
-        return appointmentService.create(req);
     }
 
     @Transactional(readOnly = true)
