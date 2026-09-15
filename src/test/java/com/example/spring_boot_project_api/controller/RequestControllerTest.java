@@ -114,10 +114,25 @@ class RequestControllerTest {
     }
 
     @Test
+    void getMine_returnsRequests() throws Exception {
+        loginAsCustomer();
+        RequestResponse response = new RequestResponse();
+        response.setId(1L);
+        response.setStatus("PENDING");
+        when(requestService.getMyRequests(1L)).thenReturn(List.of(response));
+
+        mockMvc.perform(get("/api/requests/mine"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].status").value("PENDING"));
+    }
+
+    @Test
     void getById_returnsOk() throws Exception {
+        loginAsCustomer();
         RequestResponse response = new RequestResponse();
         response.setId(5L);
-        when(requestService.getById(5L)).thenReturn(response);
+        when(requestService.getById(5L, 1L, "CUSTOMER")).thenReturn(response);
 
         mockMvc.perform(get("/api/requests/5"))
                 .andExpect(status().isOk())

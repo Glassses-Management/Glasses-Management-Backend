@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -118,6 +119,49 @@ class RequestServiceTest {
         request.setCustomerId(5L);
 
         assertThrows(AccessDeniedException.class, () -> requestService.submit(1L, "CUSTOMER", request));
+    }
+
+    @Test
+    void getById_customerOwner_isAllowed() {
+        Request request = pendingRequest(1L, "exam");
+        when(requestRepository.findById(1L)).thenReturn(Optional.of(request));
+        when(customerRepository.findByUserId(9L)).thenReturn(Optional.of(customer(5L)));
+
+        RequestResponse response = requestService.getById(1L, 9L, "CUSTOMER");
+
+        assertEquals(1L, response.getId());
+    }
+
+    @Test
+    void getById_customerOtherCustomersRequest_isDenied() {
+        Request request = pendingRequest(1L, "exam");
+        when(requestRepository.findById(1L)).thenReturn(Optional.of(request));
+        when(customerRepository.findByUserId(9L)).thenReturn(Optional.of(customer(99L)));
+
+        assertThrows(AccessDeniedException.class, () -> requestService.getById(1L, 9L, "CUSTOMER"));
+    }
+
+    @Test
+    void getById_adminCanReadAnyRequest() {
+        Request request = pendingRequest(1L, "exam");
+        when(requestRepository.findById(1L)).thenReturn(Optional.of(request));
+
+        RequestResponse response = requestService.getById(1L, 1L, "ADMIN");
+
+        assertEquals(1L, response.getId());
+    }
+
+    @Test
+    void getMyRequests_resolvesCustomerFromUserAndReturnsOnlyTheirs() {
+        Request request = pendingRequest(1L, "exam");
+        when(customerRepository.findByUserId(9L)).thenReturn(Optional.of(customer(5L)));
+        when(requestRepository.findByCustomerId(5L)).thenReturn(List.of(request));
+
+        List<RequestResponse> responses = requestService.getMyRequests(9L);
+
+        assertEquals(1, responses.size());
+        assertEquals("exam", responses.get(0).getType());
+        assertEquals(5L, responses.get(0).getCustomer_id());
     }
 
     @Test

@@ -59,8 +59,7 @@ public class RequestService {
                     .orElseThrow(() -> new EntityNotFoundException(
                             "Customer not found for id: " + request.getCustomerId()));
         } else {
-            customer = customerRepository.findByUserId(userId)
-                    .orElseThrow(() -> new EntityNotFoundException("Customer profile not found"));
+            customer = resolveCustomerByUserId(userId);
         }
 
         String type = request.getType() == null ? null : request.getType().trim().toLowerCase();
@@ -128,8 +127,17 @@ public class RequestService {
     }
 
     @Transactional(readOnly = true)
-    public RequestResponse getById(Long id) {
-        return requestMapper.toResponse(getEntity(id));
+    public List<RequestResponse> getMyRequests(Long userId) {
+        Long customerId = resolveCustomerIdByUserId(userId);
+        return requestRepository.findByCustomerId(customerId).stream()
+                .map(requestMapper::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public RequestResponse getById(Long id, Long userId, String role) {
+        Request request = getEntity(id);
+        ensureCanRead(request, userId, role);
+        return requestMapper.toResponse(request);
     }
 
     @Transactional(readOnly = true)
@@ -147,6 +155,29 @@ public class RequestService {
     @Transactional
     public void delete(Long id) {
         requestRepository.delete(getEntity(id));
+    }
+
+    private Customer resolveCustomerByUserId(Long userId) {
+        return customerRepository.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Customer profile not found"));
+    }
+
+    private Long resolveCustomerIdByUserId(Long userId) {
+        return resolveCustomerByUserId(userId).getId();
+    }
+
+    // A customer may only read their own requests. Staff and admins (the request
+    // managers) may read any request. This cannot be bypassed by sending a
+    // customerId from the frontend because the owner is resolved from the JWT.
+    private void ensureCanRead(Request request, Long userId, String role) {
+        if ("ADMIN".equalsIgnoreCase(role) || "STAFF".equalsIgnoreCase(role)) {
+            return;
+        }
+        Long myCustomerId = resolveCustomerIdByUserId(userId);
+        Long ownerCustomerId = request.getCustomer() != null ? request.getCustomer().getId() : null;
+        if (!java.util.Objects.equals(myCustomerId, ownerCustomerId)) {
+            throw new AccessDeniedException("You can only view your own requests");
+        }
     }
 
     private Request getEntity(Long id) {

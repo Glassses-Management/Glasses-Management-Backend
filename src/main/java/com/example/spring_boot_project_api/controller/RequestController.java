@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,13 +33,15 @@ public class RequestController {
     @PostMapping
     public ResponseEntity<RequestResponse> submit(@AuthenticationPrincipal Jwt jwt,
                                                     @Valid @RequestBody RequestRequest request) {
-        Object uidClaim = jwt.getClaim("uid");
-        if (!(uidClaim instanceof Number)) {
-            throw new IllegalArgumentException("Invalid token: missing user id");
-        }
-        Long uid = ((Number) uidClaim).longValue();
-        String role = jwt.getClaimAsString("role");
-        return ResponseEntity.status(HttpStatus.CREATED).body(requestService.submit(uid, role, request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(requestService.submit(uidFrom(jwt), roleFrom(jwt), request));
+    }
+
+    // The requesting customer's own requests, resolved from the JWT so the
+    // frontend never has to send a customerId.
+    @GetMapping("/mine")
+    public List<RequestResponse> getMine(@AuthenticationPrincipal Jwt jwt) {
+        return requestService.getMyRequests(uidFrom(jwt));
     }
 
     @PostMapping("/{id}/approve")
@@ -59,8 +60,8 @@ public class RequestController {
     }
 
     @GetMapping("/{id}")
-    public RequestResponse getById(@PathVariable Long id) {
-        return requestService.getById(id);
+    public RequestResponse getById(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        return requestService.getById(id, uidFrom(jwt), roleFrom(jwt));
     }
 
     @GetMapping("/customer/{customerId}")
@@ -77,5 +78,17 @@ public class RequestController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         requestService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private Long uidFrom(Jwt jwt) {
+        Object uidClaim = jwt.getClaim("uid");
+        if (!(uidClaim instanceof Number)) {
+            throw new IllegalArgumentException("Invalid token: missing user id");
+        }
+        return ((Number) uidClaim).longValue();
+    }
+
+    private String roleFrom(Jwt jwt) {
+        return jwt.getClaimAsString("role");
     }
 }
