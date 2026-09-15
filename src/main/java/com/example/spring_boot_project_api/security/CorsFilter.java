@@ -22,7 +22,6 @@ public class CorsFilter extends OncePerRequestFilter {
             "http://localhost:.*",
             "https://.*\\.trycloudflare\\.com",
             "https://.*\\.vercel\\.app",
-            "http://localhost:5173"
         };
         ALLOWED_PATTERNS = new Pattern[rawPatterns.length];
         for (int i = 0; i < rawPatterns.length; i++) {
