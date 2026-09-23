@@ -3,6 +3,7 @@ package com.example.spring_boot_project_api.config;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,9 @@ public class ProductSeeder implements ApplicationRunner {
     private final AttachmentRepository attachmentRepository;
     private final ProductAttachmentRepository productAttachmentRepository;
 
+    @Value("${app.seed-products:true}")
+    private boolean seedProducts;
+
     public ProductSeeder(ProductRepository productRepository, ProductMapper productMapper,
                          AttachmentRepository attachmentRepository,
                          ProductAttachmentRepository productAttachmentRepository) {
@@ -52,6 +56,11 @@ public class ProductSeeder implements ApplicationRunner {
      @Override
      @Transactional
      public void run(ApplicationArguments args) {
+         if (!seedProducts) {
+             log.info("Product seeding disabled (app.seed-products=false)");
+             return;
+         }
+
          List<ProductRequest> samples = buildSamples();
 
          if (productRepository.count() == 0) {
