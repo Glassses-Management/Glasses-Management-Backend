@@ -58,6 +58,7 @@ public class SecurityConfig {
     static final String[] PUBLIC_PATHS = {
             "/api/auth/login",
             "/api/auth/google",
+            "/api/auth/google/exists",
             "/api/customers/register",
     };
 

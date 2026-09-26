@@ -44,6 +44,16 @@ public class AuthController {
         return ResponseEntity.ok(authService.googleLogin(request));
     }
 
+    /**
+     * Lets the registration page discover that an address is already registered
+     * before it commits to creating an account. Answers without creating a user
+     * and without returning a session token.
+     */
+    @PostMapping("/google/exists")
+    public ResponseEntity<Map<String, Boolean>> googleExists(@Valid @RequestBody GoogleLoginRequest request) {
+        return ResponseEntity.ok(Map.of("exists", authService.googleAccountExists(request)));
+    }
+
     @PutMapping("/change-password")
     public ResponseEntity<Map<String, String>> changePassword(Authentication authentication,
                                                               @Valid @RequestBody ChangeMyPasswordRequest request) {

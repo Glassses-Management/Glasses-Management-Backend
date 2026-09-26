@@ -78,6 +78,25 @@ public class AuthService {
     }
 
     /**
+     * Reports whether a Google identity already has an account, without creating
+     * one and without issuing a session.
+     *
+     * <p>Used by the registration page, which must not silently sign somebody into
+     * an existing account: that page promises to create an account, so an address
+     * that is already registered has to be sent to the sign-in page instead. The
+     * token is still fully verified, so the answer cannot be obtained for an
+     * address the caller does not control.
+     *
+     * @return {@code true} when an account already exists for the verified address
+     */
+    @Transactional(readOnly = true)
+    public boolean googleAccountExists(GoogleLoginRequest request) {
+        var jwt = googleTokenVerifier.verify(request.getCredential());
+        String email = googleTokenVerifier.emailFrom(jwt);
+        return userRepository.findByEmail(email).isPresent();
+    }
+
+    /**
      * Signs in with a Google ID token and returns this app's own JWT.
      *
      * The browser only proves who the user is; every authorization decision is made
