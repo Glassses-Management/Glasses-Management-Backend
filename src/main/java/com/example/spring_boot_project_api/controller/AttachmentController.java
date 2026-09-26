@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,8 +51,20 @@ public class AttachmentController {
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AttachmentResponse> upload(@RequestParam("file") MultipartFile file,
                                                      @RequestParam(required = false) Long userId,
-                                                     @RequestParam(required = false) Long productId) throws IOException {
-        return ResponseEntity.status(HttpStatus.CREATED).body(attachmentService.upload(file, userId, productId));
+                                                     @RequestParam(required = false) Long productId,
+                                                     Authentication authentication) throws IOException {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(attachmentService.uploadForCaller(file, userId, productId, authentication));
+    }
+
+    /**
+     * The signed-in account's own attachments. Customer pages use this instead of
+     * /by-user/{userId}, which accepts any userId and so let one account read
+     * another account's uploaded files by editing the URL.
+     */
+    @GetMapping("/mine")
+    public List<AttachmentResponse> getMine(Authentication authentication) {
+        return attachmentService.getMine(authentication);
     }
 
     @GetMapping("/by-user/{userId}")
@@ -82,8 +95,8 @@ public class AttachmentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws IOException {
-        attachmentService.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id, Authentication authentication) throws IOException {
+        attachmentService.deleteForCaller(id, authentication);
         return ResponseEntity.noContent().build();
     }
 }

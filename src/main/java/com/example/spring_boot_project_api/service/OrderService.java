@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,8 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,24 +58,73 @@ public class OrderService {
     private final InventoryRepository inventoryRepository;
     private final PrescriptionRepository prescriptionRepository;
     private final OrderMapper orderMapper;
+    private final CustomerAccessService customerAccessService;
 
     public OrderService(OrderRepository orderRepository,
                         CustomerRepository customerRepository,
                         ProductRepository productRepository,
                         InventoryRepository inventoryRepository,
                         PrescriptionRepository prescriptionRepository,
-                        OrderMapper orderMapper) {
+                        OrderMapper orderMapper,
+                        CustomerAccessService customerAccessService) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.prescriptionRepository = prescriptionRepository;
         this.orderMapper = orderMapper;
+        this.customerAccessService = customerAccessService;
+    }
+
+    /**
+     * Orders placed by the signed-in customer. Ownership comes from the token,
+     * never from a customerId parameter. Newest first, matching the sort the
+     * customer pages used to request from the staff list endpoint.
+     *
+     * Not read-only: resolving the profile may backfill a missing user_id link.
+     */
+    @Transactional
+    public List<OrderResponse> getMine(Authentication authentication) {
+        Customer customer = customerAccessService.findMyCustomer(authentication);
+        if (customer == null) {
+            return List.of();
+        }
+
+        return orderRepository.findByCustomerId(customer.getId()).stream()
+                .sorted(Comparator.comparing(Order::getId).reversed())
+                .map(orderMapper::toResponse)
+                .toList();
     }
 
     @Transactional
     public OrderResponse create(OrderRequest request) {
-        Customer customer = customerRepository.findById(request.getCustomer_id())
+        return createInternal(request.getCustomer_id(), request);
+    }
+
+    /**
+     * Order placement for an endpoint that both staff and customers may call.
+     *
+     * Staff keep the existing behaviour and may order against any profile. A
+     * customer is forced onto their own profile: the body carries a customer_id,
+     * and trusting it would let any signed-in customer place orders against
+     * somebody else's profile and draw down real stock.
+     */
+    @Transactional
+    public OrderResponse createForCaller(OrderRequest request, Authentication authentication) {
+        if (customerAccessService.isStaff(authentication)) {
+            return create(request);
+        }
+
+        Customer own = customerAccessService.requireMyCustomer(authentication);
+        if (request.getCustomer_id() != null && !request.getCustomer_id().equals(own.getId())) {
+            throw new AccessDeniedException("You can only place orders for your own profile");
+        }
+
+        return createInternal(own.getId(), request);
+    }
+
+    private OrderResponse createInternal(Long customerId, OrderRequest request) {
+        Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
 
         if (request.getItems() == null || request.getItems().isEmpty()) {

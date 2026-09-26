@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,8 +36,9 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderResponse> create(@Valid @RequestBody OrderRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.create(request));
+    public ResponseEntity<OrderResponse> create(Authentication authentication,
+                                                @Valid @RequestBody OrderRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.createForCaller(request, authentication));
     }
 
     @PostMapping("/bulk")
@@ -44,6 +46,15 @@ public class OrderController {
         List<OrderResponse> saved = request.stream().map(orderService::create).toList();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    /**
+     * The signed-in customer's own orders. Replaces the customerId-filtered staff
+     * list for customer pages, so a customer cannot ask for someone else's id.
+     */
+    @GetMapping("/mine")
+    public List<OrderResponse> getMine(Authentication authentication) {
+        return orderService.getMine(authentication);
     }
 
     @GetMapping

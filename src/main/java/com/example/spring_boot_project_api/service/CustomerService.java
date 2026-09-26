@@ -9,10 +9,12 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.spring_boot_project_api.dto.request.CompleteProfileRequest;
 import com.example.spring_boot_project_api.dto.request.CustomerRegisterRequest;
 import com.example.spring_boot_project_api.dto.request.CustomerRequest;
 import com.example.spring_boot_project_api.dto.response.AuthResponse;
@@ -37,16 +39,69 @@ public class CustomerService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final CustomerAccessService customerAccessService;
 
     public CustomerService(CustomerRepository customerRepository, CustomerMapper customerMapper,
                            UserRepository userRepository, UserMapper userMapper,
-                           PasswordEncoder passwordEncoder, JwtService jwtService) {
+                           PasswordEncoder passwordEncoder, JwtService jwtService,
+                           CustomerAccessService customerAccessService) {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.customerAccessService = customerAccessService;
+    }
+
+    /**
+     * The signed-in customer's own profile. Throws EntityNotFoundException (404)
+     * when the account has none yet, which is how the frontend detects that a new
+     * Google signup still has to complete its profile.
+     */
+    @Transactional
+    public CustomerResponse getMyProfile(Authentication authentication) {
+        return customerMapper.toCreatedAtResponse(customerAccessService.requireMyCustomer(authentication));
+    }
+
+    /**
+     * Creates the customer profile for the signed-in account, or updates it when
+     * one is already linked.
+     *
+     * A Google signup has a name and an email but no phone number, and customer.phone
+     * is NOT NULL, so this is where that gap gets filled.
+     *
+     * The email always comes from the signed-in account and the request's copy is
+     * ignored. That is deliberate: it means completing a profile can never collide
+     * with a customer row somebody else already owns, and it reuses a staff-created
+     * row that matches the account instead of dead-ending on "Email is already in use".
+     */
+    @Transactional
+    public CustomerResponse completeMyProfile(CompleteProfileRequest request, Authentication authentication) {
+        User user = customerAccessService.requireUser(authentication);
+
+        // Trim before the uniqueness check: " 5551234 " and "5551234" are the same
+        // number, and an untrimmed value would pass the check then fail on the
+        // unique index with an opaque constraint violation.
+        String phone = request.getPhone() == null ? null : request.getPhone().trim();
+
+        Customer customer = customerAccessService.findMyCustomer(authentication);
+        if (customer == null) {
+            ensurePhoneAvailable(phone, null);
+            customer = new Customer();
+        } else {
+            ensurePhoneAvailable(phone, customer);
+        }
+
+        customer.setName(request.getName().trim());
+        customer.setPhone(phone);
+        // Always the account's own address, never one from the request body.
+        customer.setEmail(user.getEmail());
+        customer.setAddress(request.getAddress());
+        customer.setDateOfBirth(request.getDate_of_birth());
+        customer.setUser(user);
+
+        return customerMapper.toCreatedAtResponse(customerRepository.save(customer));
     }
 
     @Transactional

@@ -48,7 +48,9 @@ class OrderControllerTest {
         OrderResponse response = new OrderResponse();
         response.setId(1L);
         response.setStatus("PENDING");
-        when(orderService.create(any(OrderRequest.class))).thenReturn(response);
+        // The controller resolves the owner from the token, so the service call
+        // takes the Authentication as well.
+        when(orderService.createForCaller(any(OrderRequest.class), any())).thenReturn(response);
 
         String body = """
                 {"customer_id":1,"items":[{"product_id":10,"quantity":2,"len_price":20}]}

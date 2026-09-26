@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,6 +46,16 @@ public class PrescriptionController {
     @GetMapping
     public List<PrescriptionResponse> getAll() {
         return prescriptionService.getAll();
+    }
+
+    /**
+     * The signed-in customer's own prescriptions. Replaces the public
+     * /prescriptions/customer/{customerId} route for customer pages, which let any
+     * signed-in user read another patient's medical data by changing the id.
+     */
+    @GetMapping("/mine")
+    public List<PrescriptionResponse> getMine(Authentication authentication) {
+        return prescriptionService.getMine(authentication);
     }
 
     @GetMapping("/{id}")

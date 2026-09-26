@@ -7,6 +7,8 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,11 +39,12 @@ public class AttachmentService {
     private final ProductRepository productRepository;
     private final UserAttachmentRepository userAttachmentRepository;
     private final ProductAttachmentRepository productAttachmentRepository;
+    private final CustomerAccessService customerAccessService;
 
     public AttachmentService(AttachmentRepository attachmentRepository, AttachmentMapper attachmentMapper,
             CloudinaryStorageService cloudinaryStorageService, UserRepository userRepository,
             ProductRepository productRepository, UserAttachmentRepository userAttachmentRepository,
-            ProductAttachmentRepository productAttachmentRepository) {
+            ProductAttachmentRepository productAttachmentRepository, CustomerAccessService customerAccessService) {
         this.attachmentRepository = attachmentRepository;
         this.attachmentMapper = attachmentMapper;
         this.cloudinaryStorageService = cloudinaryStorageService;
@@ -49,6 +52,22 @@ public class AttachmentService {
         this.productRepository = productRepository;
         this.userAttachmentRepository = userAttachmentRepository;
         this.productAttachmentRepository = productAttachmentRepository;
+        this.customerAccessService = customerAccessService;
+    }
+
+    /**
+     * Attachments owned by the signed-in account, resolved from the token.
+     *
+     * This replaces GET /api/attachments/by-user/{userId} for customer pages: that
+     * route accepts any userId, so a customer could read another account's files by
+     * changing the number in the URL.
+     */
+    @Transactional(readOnly = true)
+    public List<AttachmentResponse> getMine(Authentication authentication) {
+        User user = customerAccessService.requireUser(authentication);
+        return attachmentRepository.findByUserAttachmentsUserId(user.getId()).stream()
+                .map(attachmentMapper::toCreatedAtResponse)
+                .toList();
     }
 
     @Transactional
@@ -103,6 +122,31 @@ public class AttachmentService {
         attachment.setFileSize(request.getFileSize());
 
         return attachmentMapper.toUpdatedAtResponse(attachmentRepository.save(attachment));
+    }
+
+    /**
+     * Upload for an endpoint customers may also use (their own avatar).
+     *
+     * Staff keep the existing behaviour. For a customer the owner is forced to the
+     * caller: the request carries userId, and trusting it would let anyone write
+     * files into another account, or attach a product image without being staff.
+     */
+    @Transactional
+    public AttachmentResponse uploadForCaller(MultipartFile file, Long userId, Long productId,
+                                              Authentication authentication) throws IOException {
+        if (customerAccessService.isStaff(authentication)) {
+            return upload(file, userId, productId);
+        }
+
+        User caller = customerAccessService.requireUser(authentication);
+        if (productId != null) {
+            throw new AccessDeniedException("You can only upload files to your own profile");
+        }
+        if (userId != null && !userId.equals(caller.getId())) {
+            throw new AccessDeniedException("You can only upload files to your own profile");
+        }
+
+        return upload(file, caller.getId(), null);
     }
 
     @Transactional
@@ -170,6 +214,29 @@ public class AttachmentService {
         cloudinaryStorageService.delete(attachment.getFilePath());
 
         attachmentRepository.delete(attachment);
+    }
+
+    /**
+     * Delete for an endpoint customers may also use (removing their own avatar).
+     * A customer may only delete a file that is linked to their own account;
+     * staff keep the unrestricted behaviour.
+     */
+    @Transactional
+    public void deleteForCaller(Long id, Authentication authentication) throws IOException {
+        if (customerAccessService.isStaff(authentication)) {
+            delete(id);
+            return;
+        }
+
+        User caller = customerAccessService.requireUser(authentication);
+        boolean owns = attachmentRepository.findByUserAttachmentsUserId(caller.getId()).stream()
+                .anyMatch(attachment -> attachment.getId().equals(id));
+
+        if (!owns) {
+            throw new AccessDeniedException("You can only delete your own files");
+        }
+
+        delete(id);
     }
 
     private void validateOwnership(Long userId, Long productId) {

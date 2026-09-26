@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +45,15 @@ public class AppointmentController {
     @GetMapping
     public List<AppointmentResponse> getAll() {
         return appointmentService.getAll();
+    }
+
+    /**
+     * The signed-in customer's own appointments. Replaces both the unfiltered staff
+     * list and the customerId-filtered variant for customer pages.
+     */
+    @GetMapping("/mine")
+    public List<AppointmentResponse> getMine(Authentication authentication) {
+        return appointmentService.getMine(authentication);
     }
 
     @GetMapping("/{id}")

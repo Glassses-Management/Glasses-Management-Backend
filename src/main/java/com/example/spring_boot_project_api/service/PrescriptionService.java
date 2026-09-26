@@ -1,7 +1,9 @@
 package com.example.spring_boot_project_api.service;
 
+import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,15 +25,37 @@ public class PrescriptionService {
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
     private final PrescriptionMapper prescriptionMapper;
+    private final CustomerAccessService customerAccessService;
 
     public PrescriptionService(PrescriptionRepository prescriptionRepository,
                                CustomerRepository customerRepository,
                                UserRepository userRepository,
-                               PrescriptionMapper prescriptionMapper){
+                               PrescriptionMapper prescriptionMapper,
+                               CustomerAccessService customerAccessService){
         this.prescriptionRepository = prescriptionRepository;
         this.customerRepository = customerRepository;
         this.userRepository = userRepository;
         this.prescriptionMapper = prescriptionMapper;
+        this.customerAccessService = customerAccessService;
+    }
+
+    /**
+     * Prescriptions belonging to the signed-in customer, resolved from the token
+     * instead of a customerId path variable. Newest first.
+     *
+     * Not read-only: resolving the profile may backfill a missing user_id link.
+     */
+    @Transactional
+    public List<PrescriptionResponse> getMine(Authentication authentication){
+        Customer customer = customerAccessService.findMyCustomer(authentication);
+        if (customer == null) {
+            return List.of();
+        }
+
+        return prescriptionRepository.findByCustomerId(customer.getId()).stream()
+                .sorted(Comparator.comparing(Prescription::getId).reversed())
+                .map(prescriptionMapper::toResponse)
+                .toList();
     }
 
     @Transactional

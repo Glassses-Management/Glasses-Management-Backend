@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.spring_boot_project_api.dto.request.ChangeMyPasswordRequest;
+import com.example.spring_boot_project_api.dto.request.GoogleLoginRequest;
 import com.example.spring_boot_project_api.dto.request.LoginRequest;
 import com.example.spring_boot_project_api.dto.response.UserResponse;
 import com.example.spring_boot_project_api.service.AuthService;
@@ -36,6 +37,11 @@ public class AuthController {
     @GetMapping("/me")
     public UserResponse me(Authentication authentication) {
         return authService.me(authentication);
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<String> google(@Valid @RequestBody GoogleLoginRequest request) {
+        return ResponseEntity.ok(authService.googleLogin(request));
     }
 
     @PutMapping("/change-password")

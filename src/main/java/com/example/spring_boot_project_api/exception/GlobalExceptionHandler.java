@@ -19,8 +19,35 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadCredentials(BadCredentialsException ex) {
+        // The message is intentionally not echoed back. Reporting "no such
+        // account" differently from "wrong password" would turn this endpoint
+        // into a way to enumerate registered email addresses.
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("error", "Invalid email or password"));
+    }
+
+    /**
+     * The caller proved control of the account through Google, so the real
+     * reason is safe to return and is the only thing they can act on.
+     */
+    @ExceptionHandler(GoogleSignInNotPermittedException.class)
+    public ResponseEntity<Map<String, String>> handleGoogleNotPermitted(GoogleSignInNotPermittedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    /**
+     * A Google token was rejected. The reason is returned rather than masked,
+     * because it describes the token rather than the account: a client-id
+     * mismatch, an expired token, and a request that sent an email address
+     * instead of an ID token all look identical behind BadCredentialsException,
+     * which makes the integration impossible to debug from the browser alone.
+     * No account information is disclosed.
+     */
+    @ExceptionHandler(GoogleSignInFailedException.class)
+    public ResponseEntity<Map<String, String>> handleGoogleSignInFailed(GoogleSignInFailedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", ex.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
