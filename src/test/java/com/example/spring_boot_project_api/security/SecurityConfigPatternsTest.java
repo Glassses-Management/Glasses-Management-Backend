@@ -32,6 +32,7 @@ class SecurityConfigPatternsTest {
         addAll(patterns, SecurityConfig.SELF_PATHS);
         addAll(patterns, SecurityConfig.ACCOUNT_PATHS);
         addAll(patterns, SecurityConfig.CUSTOMER_WRITABLE_PATHS);
+        addAll(patterns, SecurityConfig.FAVORITE_PATHS);
         addAll(patterns, SecurityConfig.ATTACHMENT_STAFF_PATHS);
         addAll(patterns, SecurityConfig.STAFF_RECORD_PATHS);
         return patterns.stream();

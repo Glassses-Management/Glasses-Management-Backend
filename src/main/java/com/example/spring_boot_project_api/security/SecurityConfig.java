@@ -94,6 +94,19 @@ public class SecurityConfig {
     };
 
     /**
+     * The signed-in customer's own wishlist.
+     *
+     * <p>CUSTOMER only, and not merely "any signed-in account": the handlers take
+     * the owner from the token, so a staff or admin token would otherwise be
+     * answered with that staff member's own (empty) wishlist rather than being
+     * turned away. There is no staff view of a customer's wishlist.
+     */
+    static final String[] FAVORITE_PATHS = {
+            "/api/favorites",
+            "/api/favorites/**",
+    };
+
+    /**
      * Attachment routes reserved for staff.
      *
      * The user id is a single path variable, so each level needs "*" rather than
@@ -144,6 +157,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/requests/mine").hasAnyRole("CUSTOMER")
                 .requestMatchers(HttpMethod.POST, "/api/requests").hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
                 .requestMatchers("/api/requests/**").hasAnyRole(ADMIN_STAFF)
+
+                // ---- the customer's own wishlist ----
+                .requestMatchers(FAVORITE_PATHS).hasAnyRole("CUSTOMER")
 
                 // ---- staff directories: readable by staff, writable by admin only ----
                 .requestMatchers(HttpMethod.GET, "/api/user", "/api/user/**").hasAnyRole(STAFF)

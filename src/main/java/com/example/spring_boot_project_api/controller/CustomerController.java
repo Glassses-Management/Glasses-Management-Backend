@@ -43,31 +43,18 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(customerService.create(request));
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody CustomerRegisterRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(customerService.registerCustomer(request));
-    }
-
     /**
-     * The signed-in customer's own profile. 404 when the account has no profile
-     * yet, which tells the frontend to send a new Google signup to the
-     * complete-profile page.
+     * The signed-in customer's own profile. Self-scoped, and 404 when the account
+     * has no customer record yet.
      */
     @GetMapping("/me")
-    public CustomerResponse me(Authentication authentication) {
+    public CustomerResponse getMyProfile(Authentication authentication) {
         return customerService.getMyProfile(authentication);
     }
 
-    /**
-     * Creates or updates the signed-in customer's profile. Used by the Google
-     * signup flow, which has no phone number to send with the registration form.
-     * The email comes from the token, not the body.
-     */
-    @PostMapping("/complete-profile")
-    public ResponseEntity<CustomerResponse> completeProfile(Authentication authentication,
-                                                            @Valid @RequestBody CompleteProfileRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(customerService.completeMyProfile(request, authentication));
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody CustomerRegisterRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(customerService.registerCustomer(request));
     }
 
     @PostMapping("/bulk")

@@ -144,6 +144,11 @@ public class AuthService {
      * Brand new Google signups become CUSTOMER. Staff access is deliberately not
      * granted here even for allowlisted addresses, because the allowlist is a
      * guard on existing accounts, not a way to hand out roles.
+     *
+     * <p>No customer row is created here: the customer table requires a phone
+     * number, which Google does not supply. A signup that has no customer record
+     * yet is picked up by the frontend through /customers/me returning 404, which
+     * sends the browser to the completion page.
      */
     private User registerGoogleCustomer(String email, String name) {
         User user = new User();
