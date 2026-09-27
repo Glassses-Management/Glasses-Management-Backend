@@ -1,0 +1,15 @@
+CREATE TABLE favorite (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    customer_id BIGINT NOT NULL,
+    product_id  BIGINT NOT NULL,
+    created_at  DATETIME,
+    -- Makes favouriting idempotent: the same customer cannot store the same
+    -- product twice, so a double click or a retried request cannot create a
+    -- duplicate row. The service checks for an existing row first, and this
+    -- constraint is what makes that check safe under concurrent requests.
+    CONSTRAINT uq_favorite_customer_product UNIQUE (customer_id, product_id),
+    CONSTRAINT fk_favorite_customer FOREIGN KEY (customer_id) REFERENCES customer (id),
+    CONSTRAINT fk_favorite_product FOREIGN KEY (product_id) REFERENCES product (id)
+);
+
+CREATE INDEX idx_favorite_customer ON favorite (customer_id);

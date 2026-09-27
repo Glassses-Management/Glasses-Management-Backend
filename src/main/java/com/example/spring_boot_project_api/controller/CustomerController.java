@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.spring_boot_project_api.dto.request.CompleteProfileRequest;
 import com.example.spring_boot_project_api.dto.request.CustomerRegisterRequest;
 import com.example.spring_boot_project_api.dto.request.CustomerRequest;
 import com.example.spring_boot_project_api.dto.response.AuthResponse;
@@ -39,6 +41,26 @@ public class CustomerController {
     @PostMapping
     public ResponseEntity<CustomerResponse> create(@Valid @RequestBody CustomerRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(customerService.create(request));
+    }
+
+    /**
+     * The signed-in customer's own profile. Self-scoped, and 404 when the account
+     * has no customer record yet.
+     */
+    @GetMapping("/me")
+    public CustomerResponse getMyProfile(Authentication authentication) {
+        return customerService.getMyProfile(authentication);
+    }
+
+    /**
+     * Creates the profile for an account that has none, which is where a new
+     * Google signup lands because Google cannot supply a phone number.
+     */
+    @PostMapping("/complete-profile")
+    public ResponseEntity<CustomerResponse> completeProfile(Authentication authentication,
+                                                            @Valid @RequestBody CompleteProfileRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(customerService.completeMyProfile(authentication, request));
     }
 
     @PostMapping("/register")

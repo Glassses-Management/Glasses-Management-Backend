@@ -23,6 +23,28 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", "Invalid email or password"));
     }
 
+    /**
+     * The caller proved control of the address through Google, so the real reason
+     * is safe to return and is the only thing they can act on.
+     */
+    @ExceptionHandler(GoogleSignInNotPermittedException.class)
+    public ResponseEntity<Map<String, String>> handleGoogleNotPermitted(GoogleSignInNotPermittedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    /**
+     * A Google token was refused. The reason is returned rather than masked,
+     * because it describes the token rather than the account: a client-id
+     * mismatch, an expired token, and a request that sent an email address
+     * instead of an ID token are indistinguishable behind BadCredentialsException.
+     */
+    @ExceptionHandler(GoogleSignInFailedException.class)
+    public ResponseEntity<Map<String, String>> handleGoogleSignInFailed(GoogleSignInFailedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)

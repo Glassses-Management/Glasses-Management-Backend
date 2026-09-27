@@ -9,10 +9,14 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.spring_boot_project_api.dto.request.CompleteProfileRequest;
 import com.example.spring_boot_project_api.dto.request.CustomerRegisterRequest;
 import com.example.spring_boot_project_api.dto.request.CustomerRequest;
 import com.example.spring_boot_project_api.dto.response.AuthResponse;
@@ -56,6 +60,91 @@ public class CustomerService {
 
         Customer customer = customerMapper.toEntity(request);
         return customerMapper.toCreatedAtResponse(customerRepository.save(customer));
+    }
+
+    /**
+     * The signed-in customer's own profile.
+     *
+     * <p>Self-scoped from the token: the caller is the subject, so there is no id
+     * to tamper with. Answers 404 when the account has no customer record yet,
+     * which is how a brand new Google signup is detected by the frontend.
+     */
+    @Transactional(readOnly = true)
+    public CustomerResponse getMyProfile(Authentication authentication) {
+        return customerMapper.toCreatedAtResponse(requireProfileFor(authentication));
+    }
+
+    /**
+     * Creates the customer record for an account that has none, which is the state
+     * a new Google signup starts in: the user row exists, but the customer table
+     * requires a phone number that Google does not supply.
+     *
+     * <p>The email is taken from the verified token rather than the request, and
+     * the account is resolved from the token, so this cannot be used to create or
+     * overwrite somebody else's profile.
+     */
+    @Transactional
+    public CustomerResponse completeMyProfile(Authentication authentication,
+                                              CompleteProfileRequest request) {
+        User user = requireUser(authentication);
+        String phone = request.getPhone().trim();
+
+        // Checked before the phone, otherwise a second attempt reports "phone
+        // already in use" (the account's own number) instead of the real reason.
+        if (customerRepository.findByUserId(user.getId()).isPresent()) {
+            throw new IllegalStateException("This account already has a customer profile");
+        }
+
+        if (user.getPhone() != null && !user.getPhone().isBlank() && !user.getPhone().equals(phone)) {
+            // The account already has a verified number from registration; silently
+            // replacing it would let a stolen session take over the contact number.
+            throw new IllegalStateException("This account already has a phone number on file");
+        }
+        ensurePhoneAvailable(phone, null);
+
+        // A customer row may already exist for this address without a linked account
+        // (created at the front desk). Claim it rather than failing on the unique
+        // email, so the person keeps their history.
+        Customer customer = customerRepository.findByEmail(user.getEmail()).orElseGet(Customer::new);
+        customer.setName(request.getName().trim());
+        customer.setPhone(phone);
+        customer.setEmail(user.getEmail());
+        customer.setUser(user);
+        if (request.getAddress() != null && !request.getAddress().isBlank()) {
+            customer.setAddress(request.getAddress().trim());
+        }
+        if (request.getDate_of_birth() != null) {
+            customer.setDateOfBirth(request.getDate_of_birth());
+        }
+
+        Customer saved = customerRepository.save(customer);
+
+        if (user.getPhone() == null || user.getPhone().isBlank()) {
+            user.setPhone(phone);
+            userRepository.save(user);
+        }
+
+        return customerMapper.toCreatedAtResponse(saved);
+    }
+
+    private User requireUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
+            throw new IllegalStateException("Not authenticated");
+        }
+        if (authentication.getPrincipal() instanceof Jwt jwt
+                && jwt.getClaim("uid") instanceof Number uid) {
+            return userRepository.findById(uid.longValue())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        }
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    }
+
+    private Customer requireProfileFor(Authentication authentication) {
+        User user = requireUser(authentication);
+        return customerRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Customer profile not found"));
     }
 
     @Transactional

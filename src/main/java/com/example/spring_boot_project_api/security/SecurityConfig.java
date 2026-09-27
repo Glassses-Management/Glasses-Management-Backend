@@ -53,14 +53,31 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/auth/login", "/api/customers/register").permitAll()
+                // The Google endpoints must stay reachable while signed out, otherwise
+                // a stale token in localStorage makes the bearer filter reject the
+                // sign-in attempt itself. The frontend likewise omits the
+                // Authorization header for these paths.
+                .requestMatchers("/api/auth/login",
+                        "/api/auth/google",
+                        "/api/auth/google/exists",
+                        "/api/customers/register").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/qr/**",
                         "/request-form", "/request-form/", "/request-form.html", "/request-form/**",
                         "/qr-dashboard", "/qr-dashboard/", "/qr-dashboard.html", "/qr-dashboard/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/products",
                         "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/attachments/by-product/**").permitAll()
+                // Self-scoped: the caller is the subject, taken from the token.
+                // /me must be declared before /{id} or the id path would shadow it.
+                .requestMatchers(HttpMethod.GET, "/api/customers/me").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/customers/complete-profile")
+                        .hasAnyRole("CUSTOMER")
                 .requestMatchers(HttpMethod.GET, "/api/requests/mine").hasAnyRole("CUSTOMER")
+                // Wishlist. The owner is resolved from the token inside
+                // FavoriteService, so no request can name another customer; the
+                // role rule here just keeps staff accounts out of a customer
+                // feature.
+                .requestMatchers("/api/favorites/**").hasAnyRole("CUSTOMER")
                 .requestMatchers(HttpMethod.GET, "/api/requests/customer/**",
                         "/api/requests/status/**").hasAnyRole("STAFF", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/requests").hasAnyRole("STAFF", "ADMIN")
