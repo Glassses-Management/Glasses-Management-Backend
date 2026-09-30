@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -98,5 +99,30 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleIo(java.io.IOException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", "File operation failed"));
+    }
+
+    /**
+     * A request body that could not be read at all: malformed JSON, or a value whose
+     * type does not match the field it was sent for (a fractional number for an
+     * integer field, for example). This is the caller's mistake, so it is reported as
+     * 400. Without this handler it fell through to the catch-all below and was
+     * reported as a 500, which told the client the server was broken when in fact it
+     * had rejected their input.
+     *
+     * The underlying parse message is returned because it names the offending field,
+     * which is what lets a caller fix the request. The parser's own text contains the
+     * submitted value but no server detail, so nothing internal is disclosed.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleUnreadableBody(HttpMessageNotReadableException ex) {
+        String detail = ex.getMostSpecificCause().getMessage();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", detail != null ? detail : "Request body could not be read"));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleUnexpected(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", ex.getClass().getSimpleName() + ": " + ex.getMessage()));
     }
 }

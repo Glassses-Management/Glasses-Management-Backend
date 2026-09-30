@@ -32,6 +32,7 @@ import com.example.spring_boot_project_api.repository.InventoryRepository;
 import com.example.spring_boot_project_api.repository.OrderRepository;
 import com.example.spring_boot_project_api.repository.PrescriptionRepository;
 import com.example.spring_boot_project_api.repository.ProductRepository;
+import com.example.spring_boot_project_api.util.SpecificationSort;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -242,7 +243,15 @@ public class OrderService {
             spec = spec.and((root, q, cb) -> cb.lessThanOrEqualTo(root.get("order_date"), dateTo));
         }
 
-        return orderRepository.findAll(spec, pageable).map(orderMapper::toResponse);
+        // order_date is on the allowlist above and is a real column, but Spring
+        // Data splits the sort property on "_" as well as "." and cannot resolve
+        // it, which used to surface as a 500. The ordering is therefore applied to
+        // the query instead of to the Pageable. root.get("order_date") in the
+        // filters above is the same lookup and already works.
+        return orderRepository
+                .findAll(SpecificationSort.apply(spec, pageable.getSort()),
+                        SpecificationSort.withoutSort(pageable))
+                .map(orderMapper::toResponse);
     }
 
     private void assertSortAllowed(Pageable pageable, Set<String> allowed) {

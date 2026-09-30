@@ -2,6 +2,11 @@ package com.example.spring_boot_project_api.dto.request;
 
 import java.math.BigDecimal;
 
+import com.example.spring_boot_project_api.util.StrictIntegerDeserializer;
+
+import tools.jackson.databind.annotation.JsonDeserialize;
+
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -49,4 +54,12 @@ public class ProductRequest {
     @NotBlank(message = "Category is require")
     @Size(max = 50, message = "Category must be under 50 character")
     private String category;
+
+    // Opening stock, entered on the add-product form. Optional on purpose: when it
+    // is left out the product is created exactly as before, with no inventory row,
+    // and the quantity is added later from the inventory page. When it is sent the
+    // inventory row is created in the same request.
+    @Min(value = 0, message = "Quantity cannot be negative")
+    @JsonDeserialize(using = StrictIntegerDeserializer.class)
+    private Integer quantity;
 }

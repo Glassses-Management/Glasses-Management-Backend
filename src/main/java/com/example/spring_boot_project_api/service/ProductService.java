@@ -1,6 +1,7 @@
 package com.example.spring_boot_project_api.service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -13,18 +14,25 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.spring_boot_project_api.dto.request.ProductRequest;
 import com.example.spring_boot_project_api.dto.response.ProductResponse;
 import com.example.spring_boot_project_api.mapper.ProductMapper;
+import com.example.spring_boot_project_api.model.Inventory;
 import com.example.spring_boot_project_api.model.Product;
 import com.example.spring_boot_project_api.model.ProductAttachment;
 import com.example.spring_boot_project_api.repository.InventoryRepository;
 import com.example.spring_boot_project_api.repository.OrderItemRepository;
 import com.example.spring_boot_project_api.repository.ProductAttachmentRepository;
 import com.example.spring_boot_project_api.repository.ProductRepository;
+import com.example.spring_boot_project_api.util.SpecificationSort;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class ProductService {
+    // Opening stock created together with a product starts at this reorder
+    // threshold. The column is NOT NULL, so a product created with a quantity
+    // always needs one; staff can change it later from the inventory page.
+    private static final int DEFAULT_REORDER_THRESHOLD = 5;
+
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final ProductAttachmentRepository productAttachmentRepository;
@@ -52,8 +60,27 @@ public class ProductService {
         }
 
         Product product = productMapper.toEntity(request);
+        Product saved = productRepository.save(product);
 
-        return productMapper.toCreatedAtResponse(productRepository.save(product));
+        // Opening stock is optional. When the caller sends no quantity the product
+        // is created exactly as it was before this field existed: no inventory row,
+        // and the quantity gets added from the inventory page afterwards.
+        //
+        // When a quantity is sent the inventory row is written here rather than
+        // through a second request, so the product and its stock always appear
+        // together. Both writes share this method's transaction, so if the row
+        // cannot be saved the product save is rolled back with it and the caller
+        // gets an error instead of a product with no stock.
+        if (request.getQuantity() != null) {
+            Inventory inventory = new Inventory();
+            inventory.setProduct(saved);
+            inventory.setQuantity(request.getQuantity());
+            inventory.setReorder_threshold(DEFAULT_REORDER_THRESHOLD);
+            inventory.setLast_restocked_at(LocalDateTime.now());
+            inventoryRepository.save(inventory);
+        }
+
+        return productMapper.toCreatedAtResponse(saved);
     }
 
     @Transactional(readOnly = true)
@@ -87,7 +114,14 @@ public class ProductService {
                     cb.like(cb.lower(root.get("brand")), like)));
         }
 
-        return productRepository.findAll(spec, pageable).map(productMapper::toResponse);
+        // sale_price is on the allowlist above and is a real column, but Spring
+        // Data splits the sort property on "_" as well as "." and cannot resolve
+        // it, which used to surface as a 500. The ordering is therefore applied to
+        // the query instead of to the Pageable.
+        return productRepository
+                .findAll(SpecificationSort.apply(spec, pageable.getSort()),
+                        SpecificationSort.withoutSort(pageable))
+                .map(productMapper::toResponse);
     }
 
     private void assertSortAllowed(Pageable pageable, Set<String> allowed) {
