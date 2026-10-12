@@ -11,7 +11,7 @@ See `agent_guide_ai.md` for the business workflow diagrams.
 ## Tech Stack
 
 - **Java 21**, **Spring Boot 4.x** (`spring-boot-starter-parent`)
-- Spring Data JPA + **MySQL** (`mysql-connector-j`)
+- Spring Data JPA + **PostgreSQL** (`postgresql`), hosted on **Aiven**
 - Bean Validation (`spring-boot-starter-validation`)
 - **Lombok** (configured via `annotationProcessorPaths` in `pom.xml`)
 - springdoc-openapi (Swagger UI)

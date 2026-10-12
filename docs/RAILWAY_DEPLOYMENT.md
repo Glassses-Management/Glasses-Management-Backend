@@ -1,5 +1,13 @@
 # Railway Deployment Guide
 
+> **Superseded — do not follow this guide.**
+> The project moved off Railway (its free database tier expired) and off MySQL.
+> The database is now **PostgreSQL on Aiven**, and the driver, migrations and
+> `application.properties` have all been converted. This file is kept only as a
+> record of the previous setup; the environment variable names it lists
+> (`DB_HOST`, `DB_USERNAME`, ...) still apply, but the MySQL specifics do not.
+> See **[AIVEN_SETUP.md](AIVEN_SETUP.md)** for the current setup.
+
 ## Overview
 
 This guide explains how to deploy the Optical Shop Management System backend on [Railway](https://railway.app).

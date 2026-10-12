@@ -25,7 +25,7 @@ Auth scheme / Authorization: Bearer <JWT> (HTTP Bearer / OAuth2 resource server)
 Swagger UI / http://localhost:8080/swagger-ui.html
 OpenAPI JSON / http://localhost:8080/v3/api-docs
 Data format / JSON (application/json), except file uploads (multipart/form-data)
-Java / Stack / Java 21, Spring Boot 4.x, Spring Data JPA, MySQL, springdoc-openapi
+Java / Stack / Java 21, Spring Boot 4.x, Spring Data JPA, PostgreSQL, springdoc-openapi
 
 ---
 

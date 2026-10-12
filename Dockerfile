@@ -1,11 +1,11 @@
 # ---- Build stage ----
+# Uses the Maven that ships with the image rather than the ./mvnw wrapper, which
+# would otherwise have to download a second distribution inside the build.
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /workspace
 COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
 COPY src src
-RUN chmod +x ./mvnw && ./mvnw package -DskipTests -q
+RUN mvn -B -q package -DskipTests
 
 # ---- Runtime stage ----
 FROM eclipse-temurin:21-jre

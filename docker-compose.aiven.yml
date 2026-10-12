@@ -1,0 +1,16 @@
+services:
+  # Overrides the `app` service in docker-compose.yml to run against the Aiven
+  # database instead of the local `postgres` container. The credentials come
+  # from .env (DB_HOST/DB_PORT/DB_SSLMODE point at Aiven there).
+  #
+  # Usage:
+  #   docker compose -f docker-compose.yml -f docker-compose.aiven.yml up -d app
+  app:
+    environment:
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_SSLMODE: ${DB_SSLMODE:-prefer}
+      # The base file sets `local` (fresh, empty DB -> run migrations).
+      # Against Aiven the schema already exists, so use the same profile the
+      # Docker image defaults to: production (baseline at V10, no migration).
+      SPRING_PROFILES_ACTIVE: production

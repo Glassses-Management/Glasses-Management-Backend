@@ -1,0 +1,87 @@
+# Render Blueprint for the Optical Shop backend.
+#
+# Create the service with: Render dashboard -> New -> Blueprint -> pick this repo.
+# Render reads this file, builds ./Dockerfile, and creates the web service.
+#
+# Values marked `sync: false` are secrets: Render will not store them here. It
+# prompts for each one in the dashboard, so fill those in there before the first
+# deploy. Everything else is safe to keep in the repository.
+
+services:
+  - type: web
+    name: glasses-management-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    # Closest Render region to the shop (Asia/Bangkok).
+    region: singapore
+    branch: master
+    autoDeploy: true
+    # Public, unauthenticated, and it touches the database, so it fails the
+    # check if the app is up but the Aiven connection is broken.
+    healthCheckPath: /api/products
+
+    envVars:
+      # --- Aiven PostgreSQL -------------------------------------------------
+      # Not secret. External Database URL host/port from the Aiven console.
+      - key: DB_HOST
+        value: pg-1862904f-rethchhaiyaa-f426.a.aivencloud.com
+      - key: DB_PORT
+        value: "23787"
+      - key: DB_NAME
+        value: defaultdb
+      - key: DB_USERNAME
+        value: avnadmin
+      - key: DB_PASSWORD
+        sync: false
+      # Aiven refuses plaintext connections.
+      - key: DB_SSLMODE
+        value: require
+
+      # --- Auth -------------------------------------------------------------
+      # Generate with: openssl rand -base64 32
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRATION_MINUTES
+        value: "60"
+
+      # Seeded only when the user table has no admin at all.
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+
+      # --- Public URL -------------------------------------------------------
+      # Set to https://<service-name>.onrender.com (Render shows the exact URL
+      # on the service page). Wrong here means the QR code and the request-form
+      # link point at the wrong host.
+      - key: APP_BASE_URL
+        sync: false
+
+      # The database already holds the real catalogue, so do not reseed.
+      - key: SEED_PRODUCTS
+        value: "false"
+
+      # --- Google sign-in ---------------------------------------------------
+      # Empty disables "Sign in with Google" but the app still starts.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_ALLOWED_STAFF_EMAILS
+        sync: false
+
+      # --- Cloudinary -------------------------------------------------------
+      # Required: the app will not start if these are missing, because the
+      # attachment service takes them as constructor arguments.
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_UPLOAD_FOLDER
+        value: attachments
+
+      # --- Deliberately unset ------------------------------------------------
+      # APP_TUNNEL_URL_FILE / APP_TUNNEL_QR_FILE are for the cloudflared sidecar
+      # in docker-compose. On Render the service has a stable public URL, so the
+      # QR endpoints fall back to APP_BASE_URL. Do not set them.
